@@ -31,6 +31,8 @@ doc-layers 覆盖全部四层，且每层知道自己和其他层的关系。
 
 **skill 形态**遵循 [Anthropic Agent Skills 规范](https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills)——渐进式披露，核心指令轻量常驻，细节按需加载。
 
+**交互机制**受 [grill-with-docs](https://github.com/mattpocock/skills/tree/main/skills/engineering/grill-with-docs)（Matt Pocock）启发：一次一个问题、附推荐答案、能从上下文回答的不问人。原版是领域语言精炼工具，产出 CONTEXT.md 和 ADR，grill 本身是目的。doc-layers 将其改造为**信息补全机制**：grill 是手段，由 completeness contract（信息维度集合）驱动——只对置信度不足的维度提问，所有维度达标后自动终止，进入生成阶段。
+
 ---
 
 ## 它怎么运作
