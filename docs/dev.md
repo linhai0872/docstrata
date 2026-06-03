@@ -1,4 +1,4 @@
-# Development Notes — doc-layers
+# Development Notes — docstrata
 
 > 这个 skill 在设计与实测中沉淀的工程结论：契约该放哪、哪些反馈是测试假象、为什么克制加维度。
 

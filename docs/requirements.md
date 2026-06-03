@@ -1,4 +1,4 @@
-# Requirements — doc-layers
+# Requirements — docstrata
 
 > 一个 Claude Code Skill，按四层知识结构为任意项目生成/维护文档。本文件是本项目自身的需求共识，由结对 grill 过程产出（Episodic 层：记录"约定了什么、为什么这样定"）。
 

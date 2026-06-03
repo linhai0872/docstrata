@@ -1,4 +1,4 @@
-# doc-layers — 文档索引
+# docstrata — 文档索引
 
 > 一个 Claude Code Skill，按 CoALA 四层知识结构为任意项目生成/维护文档。
 

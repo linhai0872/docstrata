@@ -1,44 +1,42 @@
-# doc-layers
+<p align="center">
+  <img src="assets/logo.svg" alt="docstrata" width="480">
+</p>
 
-> 一个 Claude Code Skill，为任意项目生成分层知识文档——业务 wiki、需求共识、知识库、开发结论。
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green" alt="License"></a>
+  <img src="https://img.shields.io/badge/Agent_Skills-compatible-blue" alt="Agent Skills">
+  <img src="https://img.shields.io/badge/Claude_Code-skill-orange" alt="Claude Code">
+</p>
 
----
+<p align="center">
+  <a href="README_EN.md">English</a> | 中文
+</p>
 
-## 它解决什么问题
-
-代码仓库里的知识是混沌的：业务背景靠口口相传、需求意图散落在聊天记录里、开发踩过的坑在下一个人重踩、coding agent 拿到的上下文一半是过期文档。
-
-现有工具（DeepWiki、Mintlify、Swimm）只做**技术文档**那一层。但工程师真正需要的知识有四种性质，不能混为一谈：
-
-| 层 | 问题 | 是什么 |
-|---|---|---|
-| **wiki** | 这个系统是什么 | 业务全景，任何人都能读懂 |
-| **requirements** | 为什么这样决策 | 需求共识 + 开发取舍的留痕 |
-| **knowledge** | 做这件事需要懂什么 | 业务规则、领域材料的索引 |
-| **dev** | 实际怎么做到的 | 实践结论、踩坑、被否定的方案 |
-
-doc-layers 覆盖全部四层，且每层知道自己和其他层的关系。
+为任意项目生成四层分层知识文档——让你的团队、业务人员和 coding agent 都能快速理解一个项目。
 
 ---
 
-## 理论基础
+## 为什么需要分层
 
-**知识分层**来自 [CoALA](https://arxiv.org/abs/2309.02427)（Sumers et al., Princeton/CMU, TMLR 2024）——认知科学研究 AI agent 记忆的论文，将持久知识分为 Episodic / Semantic / Procedural 三类长期记忆。四层文档直接对应这个分类。
+文档腐烂的根因不是懒，是**知识性质不同却混写在一起**。
 
-**文档结构**借鉴 [Diátaxis](https://diataxis.fr)（Ubuntu、NumPy 等大规模采纳）——"固定骨架 + 自由内容"被证明是最能长期维护的文档形态。
+四种知识有完全不同的受众、更新频率和可信度标准，硬塞进一个 README 必然一团混乱：
 
-**信息批判**来自 NATO Admiralty Code 来源分级、史学史料批判和 LLM 知识冲突研究（arXiv:2504.13079）——生成前先评估每条信息的可信度，代码比文档可信，文档比口述可信，矛盾不静默选一个。
+<table>
+<tr><td><b>wiki</b></td><td>系统是什么、能做什么，任何人都能读懂</td></tr>
+<tr><td><b>requirements</b></td><td>需求意图和开发决策的留痕，需求方与开发者的共识约定</td></tr>
+<tr><td><b>knowledge</b></td><td>业务规则、领域材料的索引，做这件事必须了解的背景</td></tr>
+<tr><td><b>dev</b></td><td>实现过程中得出的实践结论——踩坑、被否定的方案、推断边界</td></tr>
+</table>
 
-**skill 形态**遵循 [Anthropic Agent Skills 规范](https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills)——渐进式披露，核心指令轻量常驻，细节按需加载。
-
-**交互机制**受 [grill-with-docs](https://github.com/mattpocock/skills/tree/main/skills/engineering/grill-with-docs)（Matt Pocock）启发：一次一个问题、附推荐答案、能从上下文回答的不问人。原版是领域语言精炼工具，产出 CONTEXT.md 和 ADR，grill 本身是目的。doc-layers 将其改造为**信息补全机制**：grill 是手段，由 completeness contract（信息维度集合）驱动——只对置信度不足的维度提问，所有维度达标后自动终止，进入生成阶段。
+分层之后，每种知识找到对的受众，更新时知道改哪里，agent 读到的是可信的信息而不是过期文档。
 
 ---
 
 ## 它怎么运作
 
 ```
-输入：任意项目目录（代码 / Dify DSL / MCP 服务 / 文档集合……）
+输入：任意项目目录（代码 / Dify DSL / MCP 服务 / Skill / 文档集合……）
           │
           ▼
 ┌─────────────────────────────────────────────────────┐
@@ -47,54 +45,68 @@ doc-layers 覆盖全部四层，且每层知道自己和其他层的关系。
 │  EXPLORE ──► MAP ──► GRILL ──► GENERATE ──► STAMP   │
 │    读项目      评估      缺口时      按固定       留痕  │
 │    多源信息    信息      向人提问    骨架生成     时间戳 │
-│              完整度              增量更新            │
+│              完整度     一次一个    增量更新      +诊断 │
 │                │                                    │
 │         source-criticism                            │
-│    （来源可信度排序 · 矛盾检测 · 事实/推断标注）       │
+│  （来源可信度排序 · 矛盾检测 · 事实/推断标注）         │
 └─────────────────────────────────────────────────────┘
           │
           ▼
 ┌─────────────────────────────────────────────────────┐
-│                   四层产出                           │
+│               四层产出 + 检索入口                    │
 │                                                     │
-│   requirements ──► knowledge ──► wiki ──► dev        │
-│   (Episodic)      (Semantic)   (Semantic) (Procedural)│
-│   需求共识           业务          系统     实践结论   │
-│   开发决策           材料库        全景     踩坑记录   │
-│                                    │                │
-│                              INDEX.md               │
-│                        （coding agent 检索入口）      │
+│  requirements ──► knowledge ──► wiki ──► dev        │
+│  (Episodic)      (Semantic)   (Semantic) (Procedural)│
+│                                          │          │
+│                                    INDEX.md         │
+│                              （coding agent 入口）   │
 └─────────────────────────────────────────────────────┘
           │
           ▼
-    诊断副产物：信息健康报告
-    （冲突 · 过期 · 版本漂移 · 缺口 · 孤儿文档）
+    信息健康诊断（副产物）
+    冲突 · 过期 · 版本漂移 · 缺口 · 孤儿文档
 ```
 
-**GRILL** 是结对交互机制：agent 先自动探索，只在发现信息缺口时才向用户提问，一次一个，附推荐答案。信息充分时整层跳过提问。
+**GRILL** 是结对交互机制，来自 [grill-with-docs](https://github.com/mattpocock/skills/tree/main/skills/engineering/grill-with-docs)（Matt Pocock）的改造：agent 先自动探索项目上下文，只在发现信息缺口时才向你提问，一次一个，附推荐答案。信息充分时整层跳过提问。
+
+---
+
+## 理论基础
+
+**知识分层**基于 [CoALA](https://arxiv.org/abs/2309.02427)（Sumers et al., Princeton/CMU, TMLR 2024）——将 AI agent 的持久知识分为 Episodic / Semantic / Procedural 三类长期记忆，四层文档直接对应这个分类。
+
+**文档结构**借鉴 [Diátaxis](https://diataxis.fr)（Ubuntu、NumPy、GNOME 等大规模采纳）——固定骨架 + 自由内容，被证明是最能长期维护的文档形态。
+
+**信息批判**内建于生成过程：来源可信度排序（代码 > 注释 > 文档）、矛盾不静默选一个、事实与推断分开标注。理论来自 NATO Admiralty Code 来源分级、史学史料批判和 LLM 知识冲突研究（[arXiv:2504.13079](https://arxiv.org/abs/2504.13079)）。
+
+**Skill 形态**遵循 [Anthropic Agent Skills 规范](https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills)——渐进式披露，核心指令轻量常驻，细节按需加载，跨平台可移植。
 
 ---
 
 ## 安装
 
 ```bash
-cp -r skill/doc ~/.claude/skills/doc
+npx skills add linhai0872/docstrata
 ```
 
-兼容所有支持 [Agent Skills 标准](https://agentskills.io) 的工具（Claude Code、Cursor、VS Code 等）。
+兼容 Claude Code、Cursor、Gemini CLI、Codex、OpenCode 等支持 [Agent Skills 标准](https://agentskills.io)的工具。
+
+---
 
 ## 使用
+
+在目标项目里调用：
 
 ```
 /doc wiki            # 业务全景 → docs/wiki.md
 /doc requirements    # 需求共识 → docs/requirements.md
-/doc knowledge       # 整理业务材料 → docs/knowledge/knowledge.md
+/doc knowledge       # 业务材料索引 → docs/knowledge/knowledge.md
 /doc dev             # 开发结论 → docs/dev.md
 /doc index           # coding agent 检索入口 → docs/INDEX.md
 /doc all             # 按依赖顺序全部生成
 ```
 
-支持任意项目类型——全栈服务、Dify DSL、MCP 服务、Skill、纯文档目录，工具自动判断，无需声明。
+支持任意项目类型——全栈服务、Dify DSL、MCP 服务、Skill、纯文档目录，工具自动判断，无需声明。每次生成后附带信息健康诊断，报告跨源冲突、过期文档和版本漂移。
 
 ---
 
@@ -102,8 +114,10 @@ cp -r skill/doc ~/.claude/skills/doc
 
 本项目用自身的四层结构写成（dogfooding）：
 
-- [需求共识与全部设计决策 D1–D12](docs/requirements.md)
-- [业务全景](docs/wiki.md)
-- [开发推断与实践结论](docs/dev.md)
-- [方法论：Completeness Contract + Gap-Driven Grill](skill/doc/references/methodology.md)
-- [信息批判准则](skill/doc/references/source-criticism.md)
+| 文档 | 内容 |
+|------|------|
+| [需求共识与设计决策 D1–D12](docs/requirements.md) | 全部架构决策，含 CoALA 理论映射 |
+| [业务全景](docs/wiki.md) | 一页读懂 docstrata |
+| [开发推断与实践结论](docs/dev.md) | 实测迭代记录、被否定的方案 |
+| [方法论：Completeness Contract](skill/doc/references/methodology.md) | GRILL 机制的第一性原理 |
+| [信息批判准则](skill/doc/references/source-criticism.md) | 来源排序、矛盾处理、事实/推断标注 |
