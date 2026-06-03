@@ -98,6 +98,15 @@ last-verified: 2026-06-03
 
 否决独立 `/doc audit`。理由：我们的结果物是文档，audit 再生成文档是冗余。audit 的独特价值是"信任评估"——产出判断而非文档，且对象是全部 context（代码/git/文档/规范文件）。做成生成流程的副产物，零额外命令。source-criticism 在 EXPLORE/MAP 本就发现了这些问题，audit 只是汇总输出。
 
+### index/audit 经 MCP + Dify 工具项目实测有效 [实测]
+
+第三轮实测（dida365-agent-mcp + dify-dsl-pipe）验证：
+- **index 纯派生顺畅**：17 行、只放指针、与已有 README 边界处理得当（无 AGENTS.md 时反向引用 README 开发章节）。
+- **audit 真发现真问题且克制**：dida 测出 server.py 日志"21 V2 tools"实际 25 个；dify-pipe 测出 ADR-0003 端点描述与代码不符、版本号三处漂移（package.json/index.ts/SKILL.md）。两个测试者都遵守了"不夸大""有限度声明（列出未读文件）"。
+- **准则1 交付物形态判断正确**：dify-pipe 测试者正确区分"项目交付物（TS代码）vs 处理对象（Dify DSL）"，未混淆。
+
+据实测做的泛化修改：index 骨架的操作约定兜底（AGENTS.md→CLAUDE.md→README，都没有则删行）、行数改"目标 20-30 上限 60"；audit 新增"版本漂移""待验证外部假设"两类、补单跑 index 无 audit、补输出时序。
+
 ## 延伸知识
 
 **理论锚点的取舍** [实测]
@@ -112,3 +121,4 @@ last-verified: 2026-06-03
 - 2026-06-03 首次生成（基于 LOCCN + 报告工具双项目实测后的 skill 迭代）
 - 2026-06-03 新增"边界类问题统一成方法论"实践结论（引入 source-criticism.md 信息批判四准则）
 - 2026-06-03 新增 CoALA 核查纠正、INDEX.md/AGENTS.md 边界、audit 定位三条实践结论（对应 D11/D12）
+- 2026-06-03 第三轮实测（MCP + Dify 工具项目）后泛化修改 index/audit，新增实测结论
