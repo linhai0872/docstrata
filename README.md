@@ -12,74 +12,55 @@
   <a href="README_EN.md">English</a> | 中文
 </p>
 
-为任意项目生成四层分层知识文档——让你的团队、业务人员和 coding agent 都能快速理解一个项目。
+一个 Claude Code Skill，为项目生成分层的知识文档。
 
 ---
 
-## 为什么需要分层
+## 背景
 
-文档腐烂的根因不是懒，是**知识性质不同却混写在一起**。
+手上有很多形态各异的项目——全栈服务、Dify DSL 应用、MCP 服务、Skill……每个项目都需要文档，但文档始终是一团乱：业务人员看不懂技术向的 README，需求意图散落在各处没人整理，开发踩过的坑没有留痕，coding agent 拿到的上下文一半过期了。
 
-四种知识有完全不同的受众、更新频率和可信度标准，硬塞进一个 README 必然一团混乱：
+尝试用现有工具解决，发现它们大多只覆盖"技术参考文档"这一层。但项目里实际需要的知识有几种不同的性质，混在一起写是问题的来源：
 
 <table>
-<tr><td><b>wiki</b></td><td>系统是什么、能做什么，任何人都能读懂</td></tr>
-<tr><td><b>requirements</b></td><td>需求意图和开发决策的留痕，需求方与开发者的共识约定</td></tr>
-<tr><td><b>knowledge</b></td><td>业务规则、领域材料的索引，做这件事必须了解的背景</td></tr>
-<tr><td><b>dev</b></td><td>实现过程中得出的实践结论——踩坑、被否定的方案、推断边界</td></tr>
+<tr><td><b>wiki</b></td><td>系统是什么、能做什么，面向所有人</td></tr>
+<tr><td><b>requirements</b></td><td>需求意图和开发决策的留痕，需求方与开发者的共识</td></tr>
+<tr><td><b>knowledge</b></td><td>业务规则、领域材料，做这件事需要了解的背景</td></tr>
+<tr><td><b>dev</b></td><td>实践过程中得出的结论——踩坑、被否定的方案、推断边界</td></tr>
 </table>
 
-分层之后，每种知识找到对的受众，更新时知道改哪里，agent 读到的是可信的信息而不是过期文档。
+这个分层思路来自 [CoALA](https://arxiv.org/abs/2309.02427)（Sumers et al., Princeton/CMU, TMLR 2024）对 AI agent 记忆结构的研究——Episodic / Semantic / Procedural 三类长期记忆，四层文档与之对应。文档结构参考了 [Diátaxis](https://diataxis.fr) 的骨架设计（Ubuntu、NumPy 等在用）。
+
+docstrata 基于这套分层，做成了一个 Skill，为任意项目按需生成每一层的文档。
 
 ---
 
 ## 它怎么运作
 
+每层文档的生成走同一个循环：
+
 ```
-输入：任意项目目录（代码 / Dify DSL / MCP 服务 / Skill / 文档集合……）
-          │
-          ▼
-┌─────────────────────────────────────────────────────┐
-│                   执行循环（每层）                    │
-│                                                     │
-│  EXPLORE ──► MAP ──► GRILL ──► GENERATE ──► STAMP   │
-│    读项目      评估      缺口时      按固定       留痕  │
-│    多源信息    信息      向人提问    骨架生成     时间戳 │
-│              完整度     一次一个    增量更新      +诊断 │
-│                │                                    │
-│         source-criticism                            │
-│  （来源可信度排序 · 矛盾检测 · 事实/推断标注）         │
-└─────────────────────────────────────────────────────┘
-          │
-          ▼
-┌─────────────────────────────────────────────────────┐
-│               四层产出 + 检索入口                    │
-│                                                     │
-│  requirements ──► knowledge ──► wiki ──► dev        │
-│  (Episodic)      (Semantic)   (Semantic) (Procedural)│
-│                                          │          │
-│                                    INDEX.md         │
-│                              （coding agent 入口）   │
-└─────────────────────────────────────────────────────┘
-          │
-          ▼
-    信息健康诊断（副产物）
-    冲突 · 过期 · 版本漂移 · 缺口 · 孤儿文档
+  EXPLORE ──► MAP ──► GRILL ──► GENERATE ──► STAMP
+    读项目      评估      缺口时      按固定       留痕
+    多源信息    信息      向人提问    骨架生成     时间戳
+              完整度     一次一个    增量更新      +诊断
 ```
 
-**GRILL** 是结对交互机制，来自 [grill-with-docs](https://github.com/mattpocock/skills/tree/main/skills/engineering/grill-with-docs)（Matt Pocock）的改造：agent 先自动探索项目上下文，只在发现信息缺口时才向你提问，一次一个，附推荐答案。信息充分时整层跳过提问。
+GRILL 的交互模式来自 [grill-with-docs](https://github.com/mattpocock/skills/tree/main/skills/engineering/grill-with-docs)（Matt Pocock）：一次一个问题，附推荐答案，能从代码回答的不问人，信息充分时直接跳过。原版用于精炼领域语言；这里把它改造成信息补全机制，由「信息维度完整性契约」驱动，所有维度达标后自动进入生成阶段。
 
----
+生成过程中内建信息批判——来源可信度排序（代码 > 注释 > 文档）、发现矛盾时不静默选一个、事实与推断分开标注。这部分参考了 NATO Admiralty Code 来源分级和 LLM 知识冲突研究（[arXiv:2504.13079](https://arxiv.org/abs/2504.13079)）。
 
-## 理论基础
+四层产出结构：
 
-**知识分层**基于 [CoALA](https://arxiv.org/abs/2309.02427)（Sumers et al., Princeton/CMU, TMLR 2024）——将 AI agent 的持久知识分为 Episodic / Semantic / Procedural 三类长期记忆，四层文档直接对应这个分类。
+```
+  requirements ──► knowledge ──► wiki ──► dev
+  (Episodic)      (Semantic)   (Semantic) (Procedural)
+                                          │
+                                    INDEX.md
+                              （coding agent 检索入口）
+```
 
-**文档结构**借鉴 [Diátaxis](https://diataxis.fr)（Ubuntu、NumPy、GNOME 等大规模采纳）——固定骨架 + 自由内容，被证明是最能长期维护的文档形态。
-
-**信息批判**内建于生成过程：来源可信度排序（代码 > 注释 > 文档）、矛盾不静默选一个、事实与推断分开标注。理论来自 NATO Admiralty Code 来源分级、史学史料批判和 LLM 知识冲突研究（[arXiv:2504.13079](https://arxiv.org/abs/2504.13079)）。
-
-**Skill 形态**遵循 [Anthropic Agent Skills 规范](https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills)——渐进式披露，核心指令轻量常驻，细节按需加载，跨平台可移植。
+每次生成后输出一份信息健康诊断，汇总在探索过程中发现的跨源冲突、过期文档、版本漂移和缺口。
 
 ---
 
@@ -89,7 +70,7 @@
 npx skills add linhai0872/docstrata
 ```
 
-兼容 Claude Code、Cursor、Gemini CLI、Codex、OpenCode 等支持 [Agent Skills 标准](https://agentskills.io)的工具。
+兼容 Claude Code、Cursor、Gemini CLI、Codex、OpenCode 等支持 [Agent Skills 标准](https://agentskills.io) 的工具。
 
 ---
 
@@ -106,13 +87,13 @@ npx skills add linhai0872/docstrata
 /doc all             # 按依赖顺序全部生成
 ```
 
-支持任意项目类型——全栈服务、Dify DSL、MCP 服务、Skill、纯文档目录，工具自动判断，无需声明。每次生成后附带信息健康诊断，报告跨源冲突、过期文档和版本漂移。
+支持任意项目类型，工具自动判断，无需声明。
 
 ---
 
 ## 设计文档
 
-本项目用自身的四层结构写成（dogfooding）：
+本项目用自身的四层结构写成：
 
 | 文档 | 内容 |
 |------|------|
