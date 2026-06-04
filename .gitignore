@@ -3,3 +3,11 @@
 node_modules/
 __pycache__/
 .venv/
+
+# eval
+eval/runs/
+eval/output/
+
+# secrets
+.env
+.env.local

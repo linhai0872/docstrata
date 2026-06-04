@@ -1,0 +1,24 @@
+# 评测用例 —— runner 与 structure_gate 共用的单一用例源。
+# 每条 = 一个 (项目 × 层)。路径相对 eval/。
+#   layer    层类型，structure_gate 据此选骨架
+#   document 待评文档，judge 的评审对象
+#   context  项目 ground truth，注入 judge 核对来源忠实度
+#   rubric   该层评分标准，注入 judge 模板的 {{rubric}}
+#
+# 加新项目：把项目放进 projects/，生成产物与 context.md，再仿照下面追加用例。
+# 首批用 docstrata 自身的 docs/ 当样例——现成产物，无需重新生成即可跑通闭环。
+
+- layer: wiki
+  document: ../docs/wiki.md
+  context: projects/own/docstrata/context.md
+  rubric: rubric/wiki.md
+
+- layer: requirements
+  document: ../docs/requirements.md
+  context: projects/own/docstrata/context.md
+  rubric: rubric/requirements.md
+
+- layer: dev
+  document: ../docs/dev.md
+  context: projects/own/docstrata/context.md
+  rubric: rubric/dev.md
