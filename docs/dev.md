@@ -2,7 +2,7 @@
 
 > 这个 skill 在设计与实测中沉淀的工程结论：契约该放哪、哪些反馈是测试假象、为什么克制加维度。
 
-last-verified: 2026-06-03
+last-verified: 2026-06-04
 
 参考上游：[wiki](wiki.md) · [requirements](requirements.md)
 
@@ -110,7 +110,7 @@ last-verified: 2026-06-03
 ## 延伸知识
 
 **理论锚点的取舍** [实测]
-- CoALA 四层（Working/Episodic/Semantic/Procedural）给了文档分层的学术依据，四个子命令一一对应。
+- CoALA 的三类长期记忆（Episodic/Semantic/Procedural）给了文档分层的学术依据：四个子命令对应这三类（requirements=Episodic、wiki/knowledge=Semantic、dev=Procedural）。Working Memory 是 agent 运行时枢纽，不属四层（见上文 CoALA 核查纠正 / requirements D11）。
 - Diátaxis 验证了"固定骨架+自由内容"有效，但它纯面向人类、无 episodic 维度，所以只借结构经验不照搬象限。
 - wiki 与 knowledge 同属 Semantic 层但视角不同（系统能做什么 vs 业务背景知识），这是把"业务 wiki"和"业务知识库"分成两个子命令的依据。
 
@@ -122,3 +122,4 @@ last-verified: 2026-06-03
 - 2026-06-03 新增"边界类问题统一成方法论"实践结论（引入 source-criticism.md 信息批判四准则）
 - 2026-06-03 新增 CoALA 核查纠正、INDEX.md/AGENTS.md 边界、audit 定位三条实践结论（对应 D11/D12）
 - 2026-06-03 第三轮实测（MCP + Dify 工具项目）后泛化修改 index/audit，新增实测结论
+- 2026-06-04 修正 延伸知识 中 CoALA 表述（四层对应三类长期记忆，Working Memory 不属四层，与 CoALA 核查结论 / D11 对齐）

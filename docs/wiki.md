@@ -2,7 +2,7 @@
 
 > 一个 Claude Code Skill，按四层知识结构为任意项目生成和维护文档。
 
-last-verified: 2026-06-03
+last-verified: 2026-06-04
 
 ## 这是什么
 
@@ -14,7 +14,7 @@ last-verified: 2026-06-03
 
 ## 谁在用
 
-开发团队。后续有价值会开源给更广的社区。
+开发团队。后续若有价值会开源给更广的社区 `[待确认]`（开源是计划，非已承诺的事实）。
 
 ## 核心功能
 
@@ -28,7 +28,7 @@ last-verified: 2026-06-03
 
 ## 关键概念
 
-- **CoALA 四层** — Working / Episodic / Semantic / Procedural，本工具四层文档的理论来源。
+- **CoALA 分层** — 文档分层的学术依据：四类文档对应三种长期记忆（情景 / 语义 / 流程）。
 - **Completeness Contract** — 每层声明的信息维度集合，驱动"该不该问人"。
 - **Gap-Driven Grill** — 只对探索不到的信息维度提问，把人当作补全 context 的工具。
 

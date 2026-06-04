@@ -2,11 +2,11 @@
 
 > 一个 Claude Code Skill，按四层知识结构为任意项目生成/维护文档。本文件是本项目自身的需求共识，由结对 grill 过程产出（Episodic 层：记录"约定了什么、为什么这样定"）。
 
-last-verified: 2026-06-03
+last-verified: 2026-06-04
 
 ## Background
 
-需求方有大量形态各异的项目（全栈服务、Dify DSL 应用、CLI/MCP 服务、Skill 形态等），需要一套 agent 时代的工具自动生成/维护文档。市面无单一工具能覆盖全部需求，但可用四个对应知识层的能力组合解决。
+需求方有大量形态各异的项目（全栈服务、Dify DSL 应用、CLI/MCP 服务、Skill 形态等），需要一套 agent 时代的工具自动生成/维护文档。市面无单一工具能覆盖全部需求 `[推断]`（基于调研，未穷尽市场），但可用四个对应知识层的能力组合解决。
 
 理论锚点：
 - **CoALA**（Sumers et al., Princeton/CMU, TMLR 2024, arXiv:2309.02427）——Agent 记忆架构。三类**长期记忆**（Episodic / Semantic / Procedural）存持久知识；**Working Memory** 是"为当前决策周期维护活跃信息的中央枢纽"（原文：*central hub connecting different components*），知识从长期记忆被 retrieved into working memory 以支撑推理——它是运行时的临时中转，不是知识本身的存放处。
@@ -59,7 +59,7 @@ last-verified: 2026-06-03
 每层声明一份 completeness contract（稳定的信息维度），具体问什么由"契约维度 − 已探索信息 = 缺口"临场算出。场景灵活，契约稳定。
 
 各层 completeness contract：
-- **Wiki**：系统存在的理由 · 目标用户 · 核心能力边界 · 关键概念
+- **Wiki**：系统存在的理由 · 目标用户 · 核心能力边界 · 关键概念 · 如何上手
 - **Requirements**：原始需求意图 · 共识约定 · 开发计划 · 关键取舍
 - **Knowledge**：原始材料来源 · 业务规则提炼 · 分类索引
 - **Dev**：需求→实现的推导链 · 实践得出的事实 · 已验证/已否定的方案
@@ -112,3 +112,4 @@ docs/
 ## 变更记录
 - 2026-06-03 首次生成（结对 grill 产出 D1-D9）
 - 2026-06-03 更新 理论锚点 + CoALA 映射表（核查 CoALA 原文，更正"Working Memory 层"误用——四层均为长期记忆）；新增 D10（信息批判方法论）、D11（INDEX.md 检索入口定位）、D12（audit 诊断副产物）
+- 2026-06-04 Background 市场判断补 [推断] 标注；D4 修正 Wiki 契约（补回"如何上手"第 5 维，与 layer-wiki 对齐）
