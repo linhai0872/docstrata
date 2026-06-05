@@ -52,5 +52,5 @@ description: Generate or maintain layered project documentation across four know
 
 ## 横切方法论
 
-- [references/source-criticism.md](references/source-criticism.md)：信息批判——来源可信度排序、矛盾处理、事实vs推断标注、打破 LLM 先验偏向。处理多源信息时遵循。
-- [references/doc-conventions.md](references/doc-conventions.md)：文档写作规范——每节带摘要、上下文自包含、Markdown 优先、避免大表格、文档带时间戳。
+- [references/source-criticism.md](references/source-criticism.md)：信息批判，含来源可信度排序、矛盾处理、事实vs推断标注、打破 LLM 先验偏向。处理多源信息时遵循。
+- [references/doc-conventions.md](references/doc-conventions.md)：文档写作规范，含每节带摘要、上下文自包含、Markdown 优先、避免大表格、措辞与语气、文档带时间戳。

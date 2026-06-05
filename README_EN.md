@@ -16,23 +16,40 @@ Generate and maintain layered project documentation across four knowledge layers
 
 ---
 
-## The Problem
+## What It Does
 
-As a software engineer maintaining several projects of different types in parallel — full-stack services, Dify applications, MCP tools, Skills — documentation for each project serves three distinct audiences: the developer, the business and management team, and coding agents. These three have fundamentally different documentation needs, yet they're often squeezed into a single README, or left without any dedicated place:
+- **Four layers**: wiki (system overview) / requirements (decisions) / knowledge (domain materials) / dev (engineering conclusions)
+- **Zero-config**: one command, tool explores the project itself, asks only when information is genuinely missing
+- **Incremental updates**: diffs existing docs, preserves manual edits, never overwrites
+- **Broadly compatible**: Claude Code, Cursor, Gemini CLI, Codex, OpenCode, and any tool supporting the [Agent Skills standard](https://agentskills.io)
+
+---
+
+## Background
+
+**Human–agent pair programming still delivers the highest overall throughput.** The role of tooling is to accelerate this loop: humans clarify requirements and make decisions, agents focus on execution — each doing what they do best. But every existing tool has gaps:
+
+- **Spec frameworks** (speckit, BMAD, Superpower, etc.): bundle requirements analysis, task planning, and code generation into a fully automated pipeline. The frameworks themselves are heavy — high learning and onboarding cost. Large tasks run for half an hour and produce something nobody wanted; small tasks require so much boilerplate that the overhead outweighs the benefit.
+- **Plan mode**: handles "how to execute this task" — session-scoped execution planning. Over-specifying constrains agent freedom, and decisions stay in the conversation; the next session starts from zero.
+- **grill-with-docs** (Matt Pocock): stress-tests your plan against the existing domain model, sharpens terminology, records key decisions into CONTEXT.md and ADRs — persistent across sessions. But information management is scattered: no distinction of who reads what, or where different content belongs.
+
+docstrata builds on grill-with-docs by managing information in typed layers, giving documents independent reading and retrieval value for both humans and agents. The framework does only what it should: clarify requirements, record decisions, leave the rest to the model.
+
+### Why Layer?
+
+A project's documentation serves three audiences: developers, business and management stakeholders, and coding agents. Their needs are fundamentally different, yet they typically end up in a single README — or have no dedicated home at all:
 
 | Problem | docstrata's Solution |
 |---|---|
-| Technical docs are developer-facing; business stakeholders lack a readable system overview | **wiki** — generates a system overview accessible to everyone |
+| Technical docs are developer-facing; business stakeholders lack a readable system overview | **wiki** — a system overview everyone can read |
 | Requirements intent is scattered; design decisions lack systematic record | **requirements** — codifies consensus and decision history |
 | Domain materials are dispersed, with no unified reference or searchability | **knowledge** — organizes raw materials into a searchable index |
-| Practical lessons go unrecorded; new members or coding agents can't access them | **dev + INDEX.md** — captures inferences and conclusions, provides a unified retrieval entry |
-| Documentation depends on manual upkeep, prone to drift or becoming outdated | Auto-explores project context; asks only when information is genuinely missing; incremental updates preserve manual edits |
+| Practical lessons go unrecorded; coding agents can't access them | **dev + INDEX.md** — captures inferences and conclusions, unified retrieval entry for all four layers |
+| Documentation depends on manual upkeep, prone to drift | Auto-explores project context; asks only when information is missing; incremental updates preserve manual edits |
 
-The root cause is the same in every case: these four knowledge types have fundamentally different natures, and existing tools typically address only one of them. Mixing them together is where the problem starts.
+These four knowledge types have different natures — mixing them causes contamination. A typical drift scenario: when requirements and dev are written together, a new agent session treats settled architectural decisions as open questions, re-runs the grill loop unnecessarily, and may reverse previous conclusions. Layering solves exactly this.
 
-This layering has roots in the research literature.
-
-[CoALA](https://arxiv.org/abs/2309.02427) (Sumers et al., Princeton/CMU, TMLR 2024) studies AI agent memory architecture and divides long-term memory into three types, each mapping directly to a documentation layer:
+[CoALA](https://arxiv.org/abs/2309.02427) (Sumers et al., Princeton/CMU, TMLR 2024) studies AI agent long-term memory architecture and divides it into three types, providing theoretical grounding for the four-layer split:
 
 | CoALA Long-term Memory | Layer | Nature |
 |---|---|---|
@@ -40,11 +57,13 @@ This layering has roots in the research literature.
 | Semantic | wiki · knowledge | Domain knowledge |
 | Procedural | dev | Operational experience |
 
-`INDEX.md` serves as the retrieval entry for all four layers, feeding a coding agent's working memory — it is not itself a memory layer.
+`INDEX.md` serves as the retrieval entry for all four layers, feeding a coding agent's working memory. It is not itself a memory layer.
 
-[Diátaxis](https://diataxis.fr) divides documentation into four quadrants (tutorial / how-to / reference / explanation), used by Ubuntu, NumPy, and Django. This project borrows its "fixed skeleton + free content" structural approach; the four-layer classification logic comes from CoALA, not Diátaxis's quadrants.
+### AGENTS.md vs. docstrata
 
-docstrata packages this layering as a single Skill with four subcommands, each generating one layer.
+AGENTS.md / CLAUDE.md are **behavior constraints**: they tell the agent how to work on every session, loaded in full every session, consuming context tokens every time.
+
+docstrata produces **knowledge layers**: loaded on demand through INDEX.md — read the layer you need, don't pay for what you don't. The two are not alternatives — behavior constraints are still needed; docstrata handles knowledge accumulation outside of them. Cramming everything into AGENTS.md is hard to maintain and means every session pays a context cost for content it won't use.
 
 ---
 
@@ -73,8 +92,6 @@ Built-in source criticism handles multi-source information quality:
 - **Source ranking**: running code > tests > git history > docs; conflicts are never silently resolved
 - **Epistemic annotation**: facts and inferences are labeled separately — `[fact]` / `[inference]` / `[unverified]`
 - **LLM bias**: for non-standard implementations, records actual project behavior rather than "correcting" it to convention
-
-References: NATO Admiralty Code source grading · [LLM Knowledge Conflict Research](https://arxiv.org/abs/2504.13079)
 
 Generated files are stored in the `docs/` directory and committed with git:
 
@@ -120,6 +137,26 @@ Works with any project type — full-stack apps, Dify workflows, CLI/MCP service
 
 ---
 
+## Evaluation
+
+After changing the skill, how do you know the doc quality actually improved? Gut feeling is easy to fool. `eval/` has an LLM read the generated docs and score them against a fixed rubric — run it before and after a change, compare scores, and you can see whether it's a real improvement or just noise.
+
+Workflow: change a layer's generation spec → regenerate docs for test projects → score → compare with the previous run.
+
+Three scoring tiers, pick what you need:
+
+| Tier | Requires | Use |
+|---|---|---|
+| **Structure gate** | Nothing — pure Python | Checks for missing skeleton sections, instant, good for CI |
+| **Single LLM score** | One API key | One LLM reads and scores the doc, use for daily iteration |
+| **Multi-LLM vote** | Multiple API keys | Multiple LLMs score independently, median wins, use before releases |
+
+Scoring criteria: does the doc cover the layer's core dimensions, are inferences correctly labeled, is the audience fit right, and more — 5 dimensions total, 0–3 each, normalized ≥ 0.7 to pass.
+
+docstrata uses its own documentation as the test case — generate with the tool, score with eval. See [eval/README.md](eval/README.md) for full details.
+
+---
+
 ## Design Docs
 
 This project's documentation is written using its own four-layer structure:
@@ -131,3 +168,4 @@ This project's documentation is written using its own four-layer structure:
 | [Development Inferences & Conclusions](docs/dev.md) | Iteration notes, rejected approaches |
 | [Completeness Contract Methodology](skill/doc/references/methodology.md) | First principles of the GRILL mechanism |
 | [Source Criticism Guidelines](skill/doc/references/source-criticism.md) | Source ranking, conflict handling, fact/inference annotation |
+| [Evaluation Loop](eval/README.md) | Developer tool for validating skill quality after changes (structure gate / single judge / ensemble) |

@@ -20,7 +20,7 @@ last-verified: 2026-06-04
 
 **契约放 methodology.md，不放 SKILL.md 正文**
 
-核心方法论（completeness contract、gap-driven grill、五步循环细节）全部下沉到 `references/methodology.md`，SKILL.md 只留路由表和五步骨架。理由：渐进披露——SKILL.md 常驻 context 要轻；方法论是执行某层时才需要的深度内容。
+核心方法论（completeness contract、gap-driven grill、五步循环细节）全部下沉到 `references/methodology.md`，SKILL.md 只留路由表和五步骨架。理由是渐进披露：SKILL.md 常驻 context 要轻，方法论是执行某层时才需要的深度内容。
 
 **改动集中在 methodology.md，克制改各层契约**
 
@@ -38,7 +38,7 @@ last-verified: 2026-06-04
 
 ### 开发记忆文件是 dev 层金矿 [实测]
 
-`.workbuddy/memory/`、`.claude/memory/` 直接提供踩坑记录和被否定方案——报告工具的 dev.md 里 5 个"已否定方案"全部来自开发日志，质量远超从代码反推。初版 EXPLORE 清单漏了这类文件，已补且标为高于 git log 的优先级。
+`.workbuddy/memory/`、`.claude/memory/` 直接提供踩坑记录和被否定方案。报告工具的 dev.md 里 5 个"已否定方案"全部来自开发日志，质量远超从代码反推。初版 EXPLORE 清单漏了这类文件，已补且标为高于 git log 的优先级。
 
 ### 生成质量：业务转译与工程提炼都达标 [实测]
 
@@ -70,7 +70,7 @@ last-verified: 2026-06-04
 
 **方案F：为自动化测试设计"无人降级策略"**
 - 结论：重新定性，未照搬
-- 原因：subagent 不能交互才痛，这是**测试假象**——真实用户在 Claude Code 里能正常 grill。但它指向真需求：批量生成时不想被打断。所以改成「非交互/批量模式」开关（推断+`[待确认]`+末尾汇总缺口清单），而非"测试降级"。
+- 原因：subagent 不能交互才痛，这是**测试假象**：真实用户在 Claude Code 里能正常 grill。但它指向真需求：批量生成时不想被打断。所以改成「非交互/批量模式」开关（推断+`[待确认]`+末尾汇总缺口清单），而非"测试降级"。
 
 ### 边界类问题统一成方法论，而非逐个打补丁 [实测]
 
@@ -80,23 +80,23 @@ last-verified: 2026-06-04
 3. 事实vs推断标注（`[事实]/[推断]/[待确认]/[过期]/[缺口]`）
 4. 打破 LLM 先验偏向（非标实现记录实际行为，不"纠正"成标准做法）
 
-这条准则4 是 agent 特有的——调研里最硬的发现：LLM 会用训练数据静默覆盖项目特定信息。对"项目形态各异、不少非标实现"的场景最对症。
+这条准则4 是 agent 特有的，也是调研里最硬的发现：LLM 会用训练数据静默覆盖项目特定信息。对"项目形态各异、不少非标实现"的场景最对症。
 
-**关键克制**：这些方法论原是给人类分析师的，照搬会过度设计。明确砍掉了完整 ACH 八步、Admiralty 双轴打分、Wang&Strong 全15维、W3C PROV 本体——只留对 agent 有操作价值的核心。
+**关键克制**：这些方法论原是给人类分析师的，照搬会过度设计。明确砍掉了完整 ACH 八步、Admiralty 双轴打分、Wang&Strong 全15维、W3C PROV 本体，只留对 agent 有操作价值的核心。
 
 ### CoALA 原文核查纠正了一处概念误用 [实测]
 
-设计 INDEX.md 时，一度把它称作"Working Memory 层"。核查 CoALA 原文（§4.1）后否定：Working Memory 是 "central hub...for the current decision cycle"——agent **运行时**的活跃 context 枢纽，知识从长期记忆 "retrieved into working memory"。它是动态运行时的，不是静态文件。
+设计 INDEX.md 时，一度把它称作"Working Memory 层"。核查 CoALA 原文（§4.1）后否定：Working Memory 是 "central hub...for the current decision cycle"，即 agent **运行时**的活跃 context 枢纽，知识从长期记忆 "retrieved into working memory"。它是动态运行时的，不是静态文件。
 
 更正：四层文档全部对应**长期记忆**（episodic/semantic/procedural）；INDEX.md 是长期记忆的**检索入口**，服务于 working memory 的装填，本身不是那一层。教训：拿框架术语给自己的设计贴标签前，回原文核对定义，别用类比凑等号。
 
 ### INDEX.md 与 AGENTS.md 的边界 [实测]
 
-调研确认 AGENTS.md 是事实标准（AAIF 治理，6万+ repo），但它的定位是"怎么干活"的操作契约，且实证 ≤150 行、过长反降低 agent 成功率（arXiv:2602.11988）。所以 INDEX.md（"知识在哪"的导航）不塞进 AGENTS.md，两者信息类型不同。本工具只生成 INDEX.md，不碰 AGENTS.md，更不生成运行时动态 memory——边界清晰避免越界。
+调研确认 AGENTS.md 是事实标准（AAIF 治理，6万+ repo），但它的定位是"怎么干活"的操作契约，且实证 ≤150 行、过长反降低 agent 成功率（arXiv:2602.11988）。所以 INDEX.md（"知识在哪"的导航）不塞进 AGENTS.md，两者信息类型不同。本工具只生成 INDEX.md，不碰 AGENTS.md，更不生成运行时动态 memory：边界清晰，避免越界。
 
 ### audit 定位：诊断副产物而非命令 [推断]
 
-否决独立 `/doc audit`。理由：我们的结果物是文档，audit 再生成文档是冗余。audit 的独特价值是"信任评估"——产出判断而非文档，且对象是全部 context（代码/git/文档/规范文件）。做成生成流程的副产物，零额外命令。source-criticism 在 EXPLORE/MAP 本就发现了这些问题，audit 只是汇总输出。
+否决独立 `/doc audit`。理由：我们的结果物是文档，audit 再生成文档是冗余。audit 的独特价值是"信任评估"：产出判断而非文档，且对象是全部 context（代码/git/文档/规范文件）。做成生成流程的副产物，零额外命令。source-criticism 在 EXPLORE/MAP 本就发现了这些问题，audit 只是汇总输出。
 
 ### index/audit 经 MCP + Dify 工具项目实测有效 [实测]
 

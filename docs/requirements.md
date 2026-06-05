@@ -9,10 +9,10 @@ last-verified: 2026-06-04
 需求方有大量形态各异的项目（全栈服务、Dify DSL 应用、CLI/MCP 服务、Skill 形态等），需要一套 agent 时代的工具自动生成/维护文档。市面无单一工具能覆盖全部需求 `[推断]`（基于调研，未穷尽市场），但可用四个对应知识层的能力组合解决。
 
 理论锚点：
-- **CoALA**（Sumers et al., Princeton/CMU, TMLR 2024, arXiv:2309.02427）——Agent 记忆架构。三类**长期记忆**（Episodic / Semantic / Procedural）存持久知识；**Working Memory** 是"为当前决策周期维护活跃信息的中央枢纽"（原文：*central hub connecting different components*），知识从长期记忆被 retrieved into working memory 以支撑推理——它是运行时的临时中转，不是知识本身的存放处。
+- **CoALA**（Sumers et al., Princeton/CMU, TMLR 2024, arXiv:2309.02427）：Agent 记忆架构。三类**长期记忆**（Episodic / Semantic / Procedural）存持久知识；**Working Memory** 是"为当前决策周期维护活跃信息的中央枢纽"（原文：*central hub connecting different components*），知识从长期记忆被 retrieved into working memory 以支撑推理。它是运行时的临时中转，不是知识本身的存放处。
   - **我们的映射**：四层文档对应三类长期记忆（见下表）。Working Memory 是 agent 运行时的 context，**文档工具不生产它**；我们能做的是给它一个高效检索四层长期记忆的入口（`docs/INDEX.md`），优化 retrieval 路径，而非实现 working memory 本身。详见 D10。
-- **Diátaxis**（diataxis.fr）——文档四象限（tutorial/how-to/reference/explanation），验证"固定骨架+自由内容"有效。
-- **Anthropic Agent Skills**——渐进式披露三层加载（metadata → SKILL.md → references）。
+- **Diátaxis**（diataxis.fr）：文档四象限（tutorial/how-to/reference/explanation），验证"固定骨架+自由内容"有效。
+- **Anthropic Agent Skills**：渐进式披露三层加载（metadata → SKILL.md → references）。
 
 ## Goals
 
@@ -40,7 +40,7 @@ last-verified: 2026-06-04
 | `knowledge` | Semantic | 业务专属原始材料库（规章制度、业务规则等 raw data） | 技术 + 业务 | **已有文档为主，AI 整理+索引** |
 | `dev` | Procedural | 开发推断与实践结论（推断/实践事实，非原始事实） | 开发 + 维护者 | AI 生成，从代码+需求+知识推导 |
 
-说明：wiki 与 knowledge 同属 Semantic 层但视角不同——wiki 是"系统能做什么"，knowledge 是"做这件事需要的业务背景知识"。
+说明：wiki 与 knowledge 同属 Semantic 层但视角不同：wiki 是"系统能做什么"，knowledge 是"做这件事需要的业务背景知识"。
 
 ## 关键决策（ADR 性质）
 
@@ -97,12 +97,12 @@ docs/
 
 定位澄清（基于 CoALA 原文核查）：CoALA 的 Working Memory 是 agent **运行时**的活跃 context 中央枢纽，文档工具不生产它。INDEX.md 只是优化 agent 检索四层**长期记忆**的入口，服务于 working memory 的装填，本身不是那一层。
 
-边界（明确不做）：运行时动态 memory（对话提炼的踩坑/经验，如 Anthropic memory tool、Mem0、Qoder 的"记忆"）由 agent 运行时自己写，不由本工具生成——避免功能越界。
+边界（明确不做）：运行时动态 memory（对话提炼的踩坑/经验，如 Anthropic memory tool、Mem0、Qoder 的"记忆"）由 agent 运行时自己写，不由本工具生成：避免功能越界。
 
 与 AGENTS.md 的关系：AGENTS.md（事实标准，AAIF 治理）是"怎么干活"的操作契约（命令、约定、红线），定位是精简（实证 ≤150 行，过长反降低 agent 成功率，arXiv:2602.11988）。INDEX.md 是"知识在哪"的导航，两者信息类型不同，不混写。
 
 ### D12 — audit 是生成流程的诊断副产物，非独立命令
-生成过程中 source-criticism 本就会发现跨 context（代码/git/文档/规范文件）的冲突、过期、缺口。把这些汇总成流程末尾的一份"信息健康诊断报告"输出给用户——产出的是判断而非文档。零额外命令。否决了独立 `/doc audit`：我们的结果物是文档，再生成一份文档是冗余；audit 的独特价值是"信任评估/事实说明"，适合做副产物。
+生成过程中 source-criticism 本就会发现跨 context（代码/git/文档/规范文件）的冲突、过期、缺口。把这些汇总成流程末尾的一份"信息健康诊断报告"输出给用户：产出的是判断而非文档。零额外命令。否决了独立 `/doc audit`：我们的结果物是文档，再生成一份文档是冗余；audit 的独特价值是"信任评估/事实说明"，适合做副产物。
 
 ## Constraints
 
@@ -111,5 +111,5 @@ docs/
 
 ## 变更记录
 - 2026-06-03 首次生成（结对 grill 产出 D1-D9）
-- 2026-06-03 更新 理论锚点 + CoALA 映射表（核查 CoALA 原文，更正"Working Memory 层"误用——四层均为长期记忆）；新增 D10（信息批判方法论）、D11（INDEX.md 检索入口定位）、D12（audit 诊断副产物）
+- 2026-06-03 更新 理论锚点 + CoALA 映射表（核查 CoALA 原文，更正"Working Memory 层"误用，四层均为长期记忆）；新增 D10（信息批判方法论）、D11（INDEX.md 检索入口定位）、D12（audit 诊断副产物）
 - 2026-06-04 Background 市场判断补 [推断] 标注；D4 修正 Wiki 契约（补回"如何上手"第 5 维，与 layer-wiki 对齐）
