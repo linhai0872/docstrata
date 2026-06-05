@@ -33,13 +33,21 @@ judges:
     api_key_env: ZENMUX_API_KEY
     enabled: true
 
-  # ---- 其它厂商范例（按需启用，把上面 ZenMux 三家 enabled 改 false）----
+  # ---- 其它端点范例（按需启用，把上面 ZenMux 三家 enabled 改 false）-----------
+  #
+  # 任意端点快速接入（base_url / model 支持 $VAR 从 .env 读）：
+  # - name: custom
+  #   protocol: openai
+  #   base_url: $JUDGE_BASE_URL    # 在 .env 填：JUDGE_BASE_URL=https://...
+  #   model: $JUDGE_MODEL          # 在 .env 填：JUDGE_MODEL=gpt-4o
+  #   api_key_env: JUDGE_API_KEY   # 在 .env 填：JUDGE_API_KEY=sk-...
+  #   enabled: true
   #
   # OpenAI 官方：
   # - name: gpt
   #   protocol: openai
   #   base_url: https://api.openai.com/v1
-  #   model: gpt-5.5
+  #   model: gpt-4o
   #   api_key_env: OPENAI_API_KEY
   #   enabled: true
   #
@@ -60,10 +68,10 @@ judges:
   #   enabled: true
   #
   # OpenRouter：
-  # - name: gpt
+  # - name: openrouter
   #   protocol: openai
   #   base_url: https://openrouter.ai/api/v1
-  #   model: openai/gpt-5.5
+  #   model: openai/gpt-4o
   #   api_key_env: OPENROUTER_API_KEY
   #   enabled: true
 

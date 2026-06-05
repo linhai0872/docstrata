@@ -6,9 +6,6 @@
 - 启用 ≥2 个 judge → ensemble：取中位数为综合分（抗单家极端值），并报极差 spread
   作为分歧度。分歧大说明该用例评分不可信，建议人工复核。
 
-为什么自己调而不用 promptfoo：thinking 模型（带 reasoning 的 judge）在 promptfoo 的
-grader 下会超时/解析失败；直接调端点 100% 稳定。judge 调用 + 中位数聚合本就该自控。
-
 配置：
   judges.yaml  —— judge 端点/模型/参数（换厂商只改这里，支持 OpenAI 兼容 + Anthropic）
   tests.yaml   —— 评测用例（与 structure_gate 共用）
@@ -45,6 +42,13 @@ def load_env():
             continue
         k, v = line.split("=", 1)
         os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+
+
+def resolve(value: str) -> str:
+    """支持 judges.yaml 中的 $VAR_NAME 语法，从环境变量读取实际值。"""
+    if isinstance(value, str) and value.startswith("$"):
+        return os.environ.get(value[1:], "")
+    return value
 
 
 def load_config():
@@ -87,16 +91,18 @@ def _post(url, headers, body, timeout):
 def call_openai(judge, prompt, params):
     """OpenAI 及一切兼容端点（Ollama/OpenRouter/ZenMux/vLLM…）。"""
     key = os.environ.get(judge.get("api_key_env") or "", "")
+    base_url = resolve(judge["base_url"])
+    model = resolve(judge["model"])
     headers = {"Content-Type": "application/json"}
     if key:
         headers["Authorization"] = "Bearer " + key
     body = {
-        "model": judge["model"],
+        "model": model,
         "temperature": params.get("temperature", 0),
         "max_tokens": params.get("max_tokens", 16000),
         "messages": [{"role": "user", "content": prompt}],
     }
-    d = _post(judge["base_url"].rstrip("/") + "/chat/completions",
+    d = _post(base_url.rstrip("/") + "/chat/completions",
               headers, body, params.get("timeout_s", 300))
     return d["choices"][0]["message"].get("content") or ""
 
@@ -104,18 +110,20 @@ def call_openai(judge, prompt, params):
 def call_anthropic(judge, prompt, params):
     """Anthropic 官方 Messages API。"""
     key = os.environ.get(judge.get("api_key_env") or "", "")
+    base_url = resolve(judge["base_url"])
+    model = resolve(judge["model"])
     headers = {
         "Content-Type": "application/json",
         "x-api-key": key,
         "anthropic-version": "2023-06-01",
     }
     body = {
-        "model": judge["model"],
+        "model": model,
         "max_tokens": params.get("max_tokens", 16000),
         "temperature": params.get("temperature", 0),
         "messages": [{"role": "user", "content": prompt}],
     }
-    d = _post(judge["base_url"].rstrip("/") + "/v1/messages",
+    d = _post(base_url.rstrip("/") + "/v1/messages",
               headers, body, params.get("timeout_s", 300))
     blocks = [b.get("text", "") for b in d.get("content", []) if b.get("type") == "text"]
     return "".join(blocks)
