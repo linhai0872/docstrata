@@ -12,15 +12,16 @@
   <a href="README.md">中文</a> | English
 </p>
 
-Generate and maintain layered project documentation across four knowledge layers. An Agent Skill, compatible with Claude Code, Cursor, and other major tools.
+Generate and maintain layered project documentation organized by the nature of knowledge. An Agent Skill, compatible with Claude Code, Cursor, and other major tools.
 
 ---
 
 ## What It Does
 
-- **Four layers**: wiki (system overview) / requirements (decisions) / knowledge (domain materials) / dev (engineering conclusions)
+- **Layered generation**: prd (product intent) / requirements (decisions) / knowledge (domain materials) / wiki (system overview) / dev (engineering conclusions)
 - **Zero-config**: one command, tool explores the project itself, asks only when information is genuinely missing
 - **Incremental updates**: diffs existing docs, preserves manual edits, never overwrites
+- **Shrink to keep bounded**: compact pulls iteratively bloated layers back to a bounded, dense state so long-term memory doesn't rot
 - **Broadly compatible**: Claude Code, Cursor, Gemini CLI, Codex, OpenCode, and any tool supporting the [Agent Skills standard](https://agentskills.io)
 
 ---
@@ -41,11 +42,13 @@ A project's documentation serves three audiences: developers, business and manag
 
 | Problem | docstrata's Solution |
 |---|---|
+| Product positioning/roadmap has no home; no basis for decisions | **prd** — internal product intent, disambiguates when grilling stalls |
 | Technical docs are developer-facing; business stakeholders lack a readable system overview | **wiki** — a system overview everyone can read |
 | Requirements intent is scattered; design decisions lack systematic record | **requirements** — codifies consensus and decision history |
 | Domain materials are dispersed, with no unified reference or searchability | **knowledge** — organizes raw materials into a searchable index |
-| Practical lessons go unrecorded; coding agents can't access them | **dev + INDEX.md** — captures inferences and conclusions, unified retrieval entry for all four layers |
+| Practical lessons go unrecorded; coding agents can't access them | **dev + INDEX.md** — captures inferences and conclusions, unified retrieval entry |
 | Documentation depends on manual upkeep, prone to drift | Auto-explores project context; asks only when information is missing; incremental updates preserve manual edits |
+| Long-term projects only ever grow, layers turn bloated | **compact** — manual shrink: condense first then split, archive without delete, hard facts kept verbatim |
 
 These four knowledge types have different natures — mixing them causes contamination. A typical drift scenario: when requirements and dev are written together, a new agent session treats settled architectural decisions as open questions, re-runs the grill loop unnecessarily, and may reverse previous conclusions. Layering solves exactly this.
 
@@ -57,7 +60,9 @@ These four knowledge types have different natures — mixing them causes contami
 | Semantic | wiki · knowledge | Domain knowledge |
 | Procedural | dev | Operational experience |
 
-`INDEX.md` serves as the retrieval entry for all four layers, feeding a coding agent's working memory. It is not itself a memory layer.
+The `prd` layer sits above these as forward-looking product intent (what to build) — not one of CoALA's three memory types, but a present-tense claim, distinct from the already-happened facts requirements records.
+
+`INDEX.md` serves as the retrieval entry across layers, feeding a coding agent's working memory. It is not itself a memory layer.
 
 ### AGENTS.md vs. docstrata
 
@@ -93,17 +98,20 @@ Built-in source criticism handles multi-source information quality:
 - **Epistemic annotation**: facts and inferences are labeled separately — `[fact]` / `[inference]` / `[unverified]`
 - **LLM bias**: for non-standard implementations, records actual project behavior rather than "correcting" it to convention
 
+Under long-term iteration layers bloat; `compact` shrinks them manually (condense first — drop what code/git can reconstruct, dedup, merge by topic; then split; archive without delete, hard facts kept verbatim) — a maintenance operation beyond generation.
+
 Generated files are stored in the `docs/` directory and committed with git:
 
 ```
 docs/
+├── prd.md                # product intent (forward-looking, internal)
 ├── wiki.md
 ├── requirements.md
 ├── knowledge/
 │   ├── knowledge.md      # organized index
 │   └── raw/              # raw materials (untouched)
 ├── dev.md
-└── INDEX.md              # four-layer retrieval entry for coding agents
+└── INDEX.md              # retrieval entry for coding agents
 ```
 
 ---
@@ -123,17 +131,19 @@ Compatible with Claude Code, Cursor, Gemini CLI, Codex, OpenCode, and any tool s
 Run inside the target project:
 
 ```
-/doc wiki            # system overview → docs/wiki.md
-/doc requirements    # requirements consensus → docs/requirements.md
-/doc knowledge       # domain materials index → docs/knowledge/knowledge.md
-/doc dev             # development conclusions → docs/dev.md
-/doc index           # coding agent retrieval entry → docs/INDEX.md
-/doc all             # generate all layers in dependency order
+/docstrata prd             # product intent → docs/prd.md
+/docstrata requirements    # requirements consensus → docs/requirements.md
+/docstrata knowledge       # domain materials index → docs/knowledge/knowledge.md
+/docstrata wiki            # system overview → docs/wiki.md
+/docstrata dev             # development conclusions → docs/dev.md
+/docstrata index           # coding agent retrieval entry → docs/INDEX.md
+/docstrata compact         # shrink a bloated layer (optional layer name, e.g. /docstrata compact dev)
+/docstrata all             # generate all layers in dependency order
 ```
 
 Works with any project type — full-stack apps, Dify workflows, CLI/MCP services, Skills, plain document directories. The tool determines the type automatically; no declaration needed.
 
-`/doc all` skips layers without meaningful content rather than generating empty shells — `knowledge` is skipped if there are no domain materials; `requirements` may be folded into `wiki` for small, self-evident projects.
+`/docstrata all` skips layers without meaningful content rather than generating empty shells — `knowledge` is skipped if there are no domain materials; `requirements` may be folded into `wiki` for small, self-evident projects.
 
 ---
 
@@ -159,13 +169,14 @@ docstrata uses its own documentation as the test case — generate with the tool
 
 ## Design Docs
 
-This project's documentation is written using its own four-layer structure:
+This project's documentation is written using its own layered structure:
 
 | Document | Content |
 |------|------|
-| [Requirements & Design Decisions D1–D12](docs/requirements.md) | Full architectural decisions, including CoALA theory mapping |
+| [Product Intent](docs/prd.md) | docstrata's own positioning, value principles, scope, and roadmap |
+| [Requirements & Design Decisions](docs/requirements.md) | Full architectural decisions, including CoALA theory mapping |
 | [System Overview](docs/wiki.md) | docstrata in one page |
 | [Development Inferences & Conclusions](docs/dev.md) | Iteration notes, rejected approaches |
-| [Completeness Contract Methodology](skill/doc/references/methodology.md) | First principles of the GRILL mechanism |
-| [Source Criticism Guidelines](skill/doc/references/source-criticism.md) | Source ranking, conflict handling, fact/inference annotation |
+| [Completeness Contract Methodology](skill/docstrata/references/methodology.md) | First principles of the GRILL mechanism |
+| [Source Criticism Guidelines](skill/docstrata/references/source-criticism.md) | Source ranking, conflict handling, fact/inference annotation |
 | [Evaluation Loop](eval/README.md) | Developer tool for validating skill quality after changes (structure gate / single judge / ensemble) |
