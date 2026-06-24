@@ -22,3 +22,8 @@
   document: ../docs/dev.md
   context: projects/own/docstrata/context.md
   rubric: rubric/dev.md
+
+- layer: prd
+  document: ../docs/prd.md
+  context: projects/own/docstrata/context.md
+  rubric: rubric/prd.md

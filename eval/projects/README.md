@@ -24,7 +24,7 @@ projects/
    - 自有项目：拷贝或软链到 `own/<name>/`
    - 开源项目：`git submodule add <url> oss/<name>/repo` —— submodule 锁 commit，保证可复现
 2. **写 context.md** — 项目定位 + 文件树 + 核心事实（参考 `own/docstrata/context.md`）。不必全量代码，judge 用它核对大方向。
-3. **生成产物** — 在 agent 里用 docstrata 的非交互模式对该项目跑 `/doc all`，把产出的 `wiki.md` 等放进 `<name>/output/`。
+3. **生成产物** — 在 agent 里用 docstrata 的非交互模式对该项目跑 `/docstrata all`，把产出的 `wiki.md` 等放进 `<name>/output/`。
 4. **登记用例** — 在 `../tests.yaml` 追加 (项目 × 层)。
 
 ## golden set 选型建议（混合）

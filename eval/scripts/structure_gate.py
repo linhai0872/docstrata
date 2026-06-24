@@ -8,17 +8,25 @@
     python structure_gate.py <layer> <doc.md>
     python structure_gate.py --all            # 扫描 tests.yaml 里全部用例
 
-layer ∈ {wiki, requirements, knowledge, dev, index}
+layer ∈ {prd, wiki, requirements, knowledge, dev, index}
 退出码：0 = 全过，1 = 有用例不过门。
 """
 import re
 import sys
 from pathlib import Path
 
-# 每层必需的 section（取自 skill/doc/references/layer-*.md 的骨架）。
+# 每层必需的 section（取自 skill/docstrata/references/layer-*.md 的骨架）。
 # 每个 section 给一组别名，命中任一即算覆盖——骨架标题允许中英/措辞微调，
 # 字面精确匹配太脆（如 "Key Decisions" vs "关键决策"）。
 REQUIRED_SECTIONS = {
+    # PRD：目标用户/roadmap 不进硬门（有上下文弹性——稳定产品可能暂无 roadmap，
+    # 目标用户可能并入定位）。核心四节进门，其余降级到 LLM 软评的契约覆盖度。
+    "prd": [
+        ["定位"],
+        ["价值主张", "价值", "优先级"],
+        ["功能范围", "功能"],
+        ["非目标", "Non-goals", "Non-Goals"],
+    ],
     # "如何上手"不进硬门：它有上下文弹性（项目常有独立 README 覆盖启动/使用，
     # 不在 skill 生成范围）。降级到 LLM 软评的契约覆盖度，由 judge 结合上下文判断。
     "wiki": [
