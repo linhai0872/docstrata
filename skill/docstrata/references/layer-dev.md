@@ -24,7 +24,7 @@ dev.md 是**决策 + 事实发现的「底」**，给 agent 用，不是项目�
 - **一次性操作流水** → commit message / PR。
 - **working memory 泄漏物**：`现状快照`、`本期进度`、`待办`这类在途易失状态属于运行时 working memory，不该 append 进长期记忆的 dev 层。要追踪进度用 loop 的工作区/todos，不写 dev.md。
 
-agent 干完活带着满上下文来更新 doc 时，倾向按日期 append 一整块刚做的叙事——这是 dev.md 膨胀的机械原因。按门槛过滤 + 按主题归并（不按日期堆），并定期 `/docstrata compact`（见 [compact.md](compact.md)）。
+agent 干完活带着满上下文来更新 doc 时，倾向按日期 append 一整块刚做的叙事——这是 dev.md 膨胀的机械原因。按门槛过滤 + 按主题归并（不按日期堆），并定期 `/docstrata compact`。compact 操作详见 SKILL.md 入口。
 
 ## Completeness Contract（信息维度）
 

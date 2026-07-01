@@ -1,6 +1,6 @@
 ---
 name: docstrata
-description: Generate or maintain layered project documentation across knowledge layers (prd, requirements, knowledge, wiki, dev) plus a compact operation to keep long-lived docs bounded. Use when the user asks to document a project, write a PRD / product positioning / roadmap, create a wiki/readme for business people, recover/restore requirements, organize business knowledge materials, write development notes, or compact/shrink bloated docs. Works on any project type (full-stack apps, Dify DSL, CLI/MCP services, skills, or plain document folders).
+description: Generate or maintain layered project documentation across knowledge layers (prd, requirements, knowledge, wiki, dev) plus a compact operation to keep long-lived docs bounded. Use when the user asks to document a project, write a PRD / product positioning / roadmap, create a wiki/readme for business people, recover/restore requirements, organize business knowledge materials, write development notes, generate a doc navigation index for coding agents, generate all docs at once, or compact/shrink bloated docs. Works on any project type (full-stack apps, Dify DSL, CLI/MCP services, skills, or plain document folders).
 ---
 
 # docstrata — 分层知识文档
@@ -28,7 +28,7 @@ wiki / requirements / knowledge / dev 四层对应 CoALA 长期记忆三类（Se
 
 `index` 详见 [references/layer-index.md](references/layer-index.md)。纯派生，不走五步循环，但遵循增量更新与 STAMP。
 
-`compact` 详见 [references/compact.md](compact.md)。先压（丢可复原项 + 去重 + 按主题归并）、再拆、归档不删。手动触发，不自动跑。
+`compact` 详见 [references/compact.md](references/compact.md)。先压（丢可复原项 + 去重 + 按主题归并）、再拆、归档不删。手动触发，不自动跑。
 
 `all` 不强制每层都产出。无实质价值的层按 [methodology.md](references/methodology.md) 的优雅降级跳过，汇报里说明原因。宁可少而实，勿多而空。
 
@@ -59,7 +59,7 @@ wiki / requirements / knowledge / dev 四层对应 CoALA 长期记忆三类（Se
 
 执行收缩时：
 
-- compact → [references/compact.md](compact.md)（横切操作，不是生成层）
+- compact → [references/compact.md](references/compact.md)（横切操作，不是生成层）
 
 ## 横切方法论
 

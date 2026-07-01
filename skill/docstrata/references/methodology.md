@@ -1,5 +1,15 @@
 # Methodology — Completeness Contract & Gap-Driven Grill
 
+## Contents
+- 第一性原理
+- EXPLORE：先穷尽自动探索，再考虑问人
+- MAP：给每个维度打置信度
+- GRILL：只问缺口，一次一个
+- GENERATE：固定骨架，增量更新
+- STAMP：留痕
+- 增量更新只增不收，收缩靠 compact
+- 小项目的优雅降级
+
 每层文档靠 **completeness contract**（完整性契约）驱动，不靠固定问题清单。这是本 skill 的核心方法论，各生成层通用（prd/requirements/knowledge/wiki/dev；index 纯派生、compact 收缩操作不走此循环）。
 
 ## 第一性原理
@@ -10,7 +20,7 @@
 问题 = 契约维度 − 已探索到的信息
 ```
 
-> **横切方法论**：EXPLORE / MAP / GENERATE 处理多源信息时，遵循 [references/source-criticism.md](source-criticism.md)——来源可信度排序、矛盾处理、事实 vs 推断标注、打破 LLM 先验偏向。下文只点出各步在哪里用它。
+> **横切方法论**：EXPLORE / MAP / GENERATE 处理多源信息时，遵循 source-criticism 准则——来源可信度排序、矛盾处理、事实 vs 推断标注、打破 LLM 先验偏向。横切方法论的入口见 SKILL.md，下文只点出各步在哪里用它。
 
 ## EXPLORE：先穷尽自动探索，再考虑问人
 
@@ -97,7 +107,7 @@ GRILL 只问 `low` / `missing` 维度，一次一个，附带推荐答案。
 
 ## 增量更新只增不收，收缩靠 compact
 
-GENERATE 只做「补充/修订」，不负责「收缩」。长期项目因此会膨胀——dev 退化成 devlog、requirements 决策无限堆叠。收缩是独立的手动操作 `/docstrata compact`（见 [compact.md](compact.md)）：先压（丢 code/git 可复原项 + 去重 + 按主题归并）、再拆、归档不删。生成与收缩分开：平时廉价增量记，到点了手动郑重收。
+GENERATE 只做「补充/修订」，不负责「收缩」。长期项目因此会膨胀——dev 退化成 devlog、requirements 决策无限堆叠。收缩是独立的手动操作 `/docstrata compact`：先压（丢 code/git 可复原项 + 去重 + 按主题归并）、再拆、归档不删。生成与收缩分开：平时廉价增量记，到点了手动郑重收。compact 操作详见 SKILL.md 入口。
 
 ## 小项目的优雅降级
 
