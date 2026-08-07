@@ -12,7 +12,7 @@ PRD 记**前瞻 intent**——要做成什么。其余三层各管一类不同�
 - **PRD vs wiki**：PRD 对内、前瞻 intent；wiki 对外、as-built——现在是什么、怎么用。两者在「定位/目标用户/价值」上重叠。**重叠项 PRD 写一次当源，wiki 引用不复制**，否则两处必然漂移过期。
 - **PRD 不进 always-on context**：Kiro steering / spec-kit constitution 每次交互全量加载产品文档，docstrata 不学。PRD 与其余层一样走 INDEX 按需加载；grilling 卡在产品决策时才读，不为用不到的内容每次付 token。
 
-PRD 不在 CoALA 三类长期记忆里。它是当下的前瞻主张，四层之上的意图锚点；grilling 答不出某个决策时，用 PRD 的定位/价值/优先级消歧。
+PRD 不在 CoALA 三类长期记忆里。它是当下的前瞻主张，各层之上的意图锚点；grilling 答不出某个决策时，用 PRD 的定位/价值/优先级消歧。
 
 ## Completeness Contract（信息维度）
 

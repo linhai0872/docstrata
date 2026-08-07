@@ -9,170 +9,118 @@
 </p>
 
 <p align="center">
-  <a href="README_EN.md">English</a> | 中文
+  English | <a href="README_ZH.md">中文</a>
 </p>
 
-按知识性质分层，为任意项目生成和维护文档。Agent Skill，兼容 Claude Code、Cursor 等主流工具。
+**docstrata** — Structured project memory for coding agents. Layered context that persists across sessions, so agents stop re-learning your project from scratch.
 
 ---
 
-## 定位
+## The Problem
 
-- **分层生成**：prd（产品主张）/ requirements（需求决策）/ knowledge（领域材料）/ wiki（业务全景）/ dev（开发结论）
-- **开箱即用**：一条命令，工具自行探索项目，只在信息有缺口时提问
-- **增量更新**：已有文档则 diff 更新，保留人工修改，不覆盖
-- **收缩维护**：compact 把随迭代膨胀的层收回有界，长期记忆不腐化
-- **兼容主流**：Claude Code、Cursor、Gemini CLI、Codex、OpenCode 等 Agent Skills 标准工具
+Code generation is fast now. The real bottleneck is context.
 
----
+Every new agent session starts cold. The agent doesn't know why you chose architecture B over A, what you tried and rejected last month, or which module has a subtle constraint that breaks if you touch it wrong. You re-explain. It re-discovers. Old mistakes repeat.
 
-## 背景
+Most developers manage context by hand — a `CONTEXT.md` here, some ADRs there, maybe a shared doc. It works until the project grows. Human memory fades with time and blurs with volume. Three weeks later you can't recall the reasoning; three months later you forgot the decision existed.
 
-**人与 agent 结对编程的综合效率依然最高。** 工具的意义是提速这个小闭环：让人说清需求、做出决策，agent 专注执行，各司其职。但现有工具各有短板：
-
-- **spec 框架**（speckit、BMAD、Superpower 等）：把需求分析、任务规划、代码生成全部编排进来，追求一键全自动。框架本身过重，理解和上手成本高；大型任务跑半小时出来的不是想要的结果，沉没成本大；小型任务准备一堆文档，负担大于收益。
-- **plan 模式**：处理"这次任务怎么做"，执行规划会话内有效。细化过多会约束 agent 的发挥，且决策留在会话里，下次从头来过。
-- **grill-with-docs**（Matt Pocock）：对照已有领域模型逐一审问计划，澄清术语、记录决策，跨会话持久有效。但信息管理散，没有区分谁看什么、什么性质的内容放哪里。
-
-docstrata 在 grill-with-docs 的基础上，把信息按性质分层管理，让文档对人、对 agent 都有独立的阅读和检索价值。框架只做该做的事：澄清需求、记录决策，其他交给模型。
-
-### 为什么要分层
-
-项目文档服务三类读者：开发者、业务管理侧、coding agent。三者对文档的形式需求完全不同，却往往被混进同一份 README，或根本没有对应的地方存放：
-
-| 问题 | docstrata 的解法 |
-|---|---|
-| 产品定位/路线无处沉淀，决策时无依据 | **prd** — 对内产品主张，grilling 卡住时消歧 |
-| 技术文档面向开发者，业务侧缺系统全景 | **wiki** — 所有人都能读的业务全景 |
-| 需求意图散落，设计决策缺留痕 | **requirements** — 固化需求共识与架构决策 |
-| 领域材料分散，缺统一检索 | **knowledge** — 整理原始材料为可检索索引 |
-| 实践经验没有沉淀，coding agent 读不到 | **dev + INDEX.md** — 记录推断与结论，提供统一入口 |
-| 文档靠人工维护，随迭代失真过期 | 自动探索上下文，缺口才提问；增量更新，保留人工修改 |
-| 长期项目文档只增不减、越积越臃肿 | **compact** — 手动收缩，先压再拆、归档不删、硬事实保真 |
-
-这四类知识的信息性质不同，混在一起写会相互污染。典型的漂移场景：requirements 和 dev 混写后，新的 agent 会话会把已确定的架构决策当作开放问题重新讨论，无谓地重跑 grill，甚至推翻之前的结论。分层解决的正是这个问题。
-
-[CoALA](https://arxiv.org/abs/2309.02427)（Sumers et al., Princeton/CMU, TMLR 2024）研究 AI agent 长期记忆架构，把长期记忆分成三类，为四层划分提供了理论依据：
-
-| CoALA 长期记忆 | 对应层 | 本质 |
-|---|---|---|
-| Episodic | requirements | 事件与决策的留痕 |
-| Semantic | wiki · knowledge | 领域知识 |
-| Procedural | dev | 操作经验 |
-
-`prd` 层是这之上的前瞻产品意图（要做成什么），不属 CoALA 记忆三类，是当下主张——区别于 requirements 记录的已发生事实。
-
-`INDEX.md` 是各层的检索入口，服务 coding agent 的 working memory 装填，本身不是那一层。
-
-### 和 AGENTS.md 的区别
-
-AGENTS.md / CLAUDE.md 的定位是**行为约束**：告诉 agent 每次该怎么干活，每次会话全量加载，每次都消耗 context token。
-
-docstrata 产出的是**知识层**：通过 INDEX.md 按需加载，用到哪层读哪层，不用的不付 token。两者不是替代关系：行为约束仍然需要，docstrata 做的是行为约束之外的知识沉淀。把所有内容塞进 AGENTS.md 既难维护，也意味着每次会话都为用不到的内容付出 context 代价。
+No dedicated tool existed for structured, layered project context management. Existing approaches were too lightweight — a single flat file can't capture the different *kinds* of knowledge a real project accumulates. So I built one.
 
 ---
 
-## 怎么运作
+## How docstrata Thinks About It
 
-每层走同一个五步循环：
+### Structured memory over manual notes
 
-| 步骤 | 做什么 |
-|---|---|
-| **EXPLORE** | 读项目多源信息：代码结构、现有文档、git 历史、开发日志 |
-| **MAP** | 把信息映射到该层的信息维度，标置信度（high / medium / low / missing） |
-| **GRILL** | 只对 `low` / `missing` 维度提问；一次一个，附推荐答案，代码能回答的不问人 |
-| **GENERATE** | 按固定骨架生成；已有文档则增量更新，保留人工修改 |
-| **STAMP** | 更新 `last-verified` 时间戳，输出信息健康诊断 |
+Project knowledge naturally splits by kind: product intent, historical decisions, domain knowledge, codebase structure, engineering lessons learned. Mixing them in one file makes everything harder to find — for you and for agents.
 
-GRILL 的核心逻辑：每层预先声明一份**信息维度集合**（completeness contract），缺口决定问什么：
+docstrata gives each kind its own layer, with a clear audience and purpose. The layered design draws from long-term memory classification in cognitive architecture research ([CoALA](https://arxiv.org/abs/2309.02427)): episodic memory (decisions, what happened), semantic memory (domain knowledge, codebase structure), procedural memory (engineering lessons, what works).
 
-```
-问题 = 契约维度 − 已探索到的信息
-```
+### Grill: the pair-programming lever
 
-有完整需求文档和开发日志的项目，GRILL 往往整层跳过。提问模式来自 [grill-with-docs](https://github.com/mattpocock/skills)（Matt Pocock）。
+When docstrata generates a layer, it first explores everything it can find on its own — code structure, existing docs, configs, git history. Questions that can be answered by looking, it answers by looking.
 
-生成时内建信息批判，处理多源信息的质量问题：
+Only the questions that require *your* judgment get asked. These are decisions: trade-offs, priorities, constraints only you know. The grill mechanism batches these into frontier rounds — each round surfaces all unlocked questions at once, typically done in 3–5 rounds. Small input from you, large output from the system.
 
-- **来源排序**：运行代码 > 测试 > git 历史 > 文档；多源矛盾不静默选一个
-- **认知标注**：事实与推断分开标，标注格式 `[事实]` / `[推断]` / `[待确认]`
-- **LLM 偏向**：遇到非标实现，记录项目实际行为，不"纠正"成标准做法
+### Simplicity
 
-长期迭代下层文档会膨胀，`compact` 手动收缩（先压：丢 code/git 可复原项 + 去重 + 按主题归并；再拆；归档不删、硬事实逐字保真），是生成之外的维护操作。
-
-生成的文件固定放在 `docs/`，随 git 提交：
-
-```
-docs/
-├── prd.md                # 产品主张（前瞻 intent，对内）
-├── wiki.md
-├── requirements.md
-├── knowledge/
-│   ├── knowledge.md      # 整理后的索引
-│   └── raw/              # 原始材料（不改动）
-├── dev.md
-└── INDEX.md              # coding agent 的检索入口
-```
+A useful tool shouldn't require learning a framework first. docstrata has layers because context naturally has layers. It has a grill because some knowledge lives only in your head. Beyond that, it stays out of your way.
 
 ---
 
-## 安装
+## What docstrata Does
+
+docstrata is the structured memory for your project. It covers context that humans need (product intent, business knowledge, historical decisions) and context that coding agents need (codebase structure, module relationships, engineering pitfalls) — in the same system.
+
+```
+prd → requirements → knowledge → [wiki, repo-wiki] → dev → index
+                                    ↑ parallel, independent
+```
+
+| Layer | Output | Content | Audience |
+|---|---|---|---|
+| **prd** | `docs/prd.md` | Product intent: positioning, value, roadmap | Internal team |
+| **requirements** | `docs/requirements.md` | Requirements consensus + key decisions | PM + developers |
+| **knowledge** | `docs/knowledge/knowledge.md` | Domain materials index + Glossary | Everyone |
+| **wiki** | `docs/wiki.md` | System overview (business language) | Everyone incl. business |
+| **repo-wiki** | `docs/repo-wiki.md` | Codebase index: architecture/modules/stack/data flow | Coding agents + devs |
+| **dev** | `docs/dev.md` | Engineering conclusions: pitfalls, rejected approaches, non-obvious decisions | Engineers + agents |
+| **index** | `docs/INDEX.md` | Doc navigation + context triggers | Coding agents |
+
+### Works with Matt Pocock's Skills
+
+docstrata and [Matt Pocock's engineering skills](https://github.com/mattpocock/skills) are complementary. Matt's skills handle development methodology — TDD, code review, grilling for specs. docstrata handles what those skills assume exists: the project context that makes an agent effective. Use them together or independently.
+
+A typical combined workflow:
+
+```
+Before:  agent reads repo-wiki + dev.md       → knows the codebase and past lessons
+During:  /matt-grilling → /implement → /review → Matt skills handle execution
+After:   /docstrata update                    → detects what changed, refreshes affected layers
+```
+
+docstrata bookends the development cycle: load context before coding, detect and sync changes after. Matt's skills handle everything in between. Periodically, `/docstrata compact` shrinks bloated layers back to bounded size.
+
+---
+
+## Installation
 
 ```bash
 npx skills add linhai0872/docstrata
 ```
 
-兼容支持 [Agent Skills 标准](https://agentskills.io) 的工具：Claude Code、Cursor、Gemini CLI、Codex、OpenCode 等。
+Compatible with [Agent Skills standard](https://agentskills.io): Claude Code, Cursor, Gemini CLI, Codex, OpenCode, etc.
 
 ---
 
-## 使用
+## Usage
 
 ```
-/docstrata prd             # 产品主张 → docs/prd.md
-/docstrata requirements    # 需求共识 → docs/requirements.md
-/docstrata knowledge       # 业务材料索引 → docs/knowledge/knowledge.md
-/docstrata wiki            # 业务全景 → docs/wiki.md
-/docstrata dev             # 开发结论 → docs/dev.md
-/docstrata index           # coding agent 检索入口 → docs/INDEX.md
-/docstrata compact         # 收缩膨胀的层（可带层名，如 /docstrata compact dev）
-/docstrata all             # 按依赖顺序全部生成
+/docstrata prd             # product intent
+/docstrata requirements    # requirements consensus
+/docstrata knowledge       # domain materials index
+/docstrata wiki            # system overview
+/docstrata repo-wiki       # codebase index (architecture/modules/stack)
+/docstrata dev             # development conclusions
+/docstrata index           # doc navigation + context triggers
+/docstrata compact         # shrink bloated layers
+/docstrata update          # detect changes, refresh affected layers
+/docstrata all             # generate all in dependency order
 ```
 
-支持任意项目类型，工具自行判断，无需声明。`/docstrata all` 会跳过无实质价值的层：没有业务材料就跳过 knowledge，功能一目了然的小项目 requirements 也可以不单独成文。
+Works with any project type — auto-detected. `/docstrata all` skips layers without meaningful content.
 
 ---
 
-## 评测
+## Design Docs
 
-改了 skill 之后，怎么知道文档质量有没有真的变好？靠主观感觉容易自欺欺人。`eval/` 让 LLM 替你读生成的文档、按固定标准打分——改前改后各跑一次，对比分数，是真改进还是噪声一目了然。
+This project's documentation uses its own layered structure:
 
-流程：改某层生成规范 → 对测试项目重新生成文档 → 打分 → 与上一轮对比。
-
-打分分三档，按需选用：
-
-| 档 | 需要什么 | 用途 |
-|---|---|---|
-| **结构门** | 无，纯 Python | 检查骨架有没有缺段落，秒出结果，适合 CI |
-| **单 LLM 打分** | 一个 API key | 一个 LLM 读文档评分，日常迭代用 |
-| **多 LLM 合议** | 多个 API key | 多家 LLM 独立打分取中位数，结果更可靠，发版前用 |
-
-打分标准：文档覆不覆盖该层的核心维度、有没有把推断误标成事实、受众是否适配等，共 5 项，每项 0–3 分，归一化后 ≥ 0.7 算通过。
-
-docstrata 用自身文档作为测试案例——先用工具生成，再用 eval 打分，自己验自己。详见 [eval/README.md](eval/README.md)。
-
----
-
-## 设计文档
-
-本项目的文档用自身的分层结构写成：
-
-| 文档 | 内容 |
+| Document | Content |
 |------|------|
-| [产品主张](docs/prd.md) | docstrata 自身的定位、价值原则、功能范围与 roadmap |
-| [需求共识与设计决策](docs/requirements.md) | 全部架构决策，含 CoALA 理论映射 |
-| [业务全景](docs/wiki.md) | 一页读懂 docstrata |
-| [开发推断与实践结论](docs/dev.md) | 实测迭代记录、被否定的方案 |
-| [Completeness Contract 方法论](skill/docstrata/references/methodology.md) | GRILL 机制的第一性原理 |
-| [信息批判准则](skill/docstrata/references/source-criticism.md) | 来源排序、矛盾处理、事实/推断标注 |
-| [评测闭环](eval/README.md) | skill 迭代后验证质量的开发工具（结构门 / 单 judge / ensemble 三档） |
+| [Product Intent](docs/prd.md) | Positioning, value principles, scope, roadmap |
+| [Requirements & Decisions](docs/requirements.md) | All architectural decisions + CoALA mapping |
+| [System Overview](docs/wiki.md) | docstrata in one page |
+| [Development Conclusions](docs/dev.md) | Iteration notes, rejected approaches |
+| [Methodology](skill/docstrata/references/methodology.md) | First principles of the GRILL mechanism |
+| [Source Criticism](skill/docstrata/references/source-criticism.md) | Source ranking, conflict handling, annotations |

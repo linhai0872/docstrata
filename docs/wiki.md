@@ -1,53 +1,72 @@
 # docstrata
 
-> 一个 Agent Skill，按知识性质分层为任意项目生成和维护文档。
+> Project Context System：为任意项目管理分层认知资产，让 coding agent 带着正确 context 开发、把新认知沉淀回来。
 
-last-verified: 2026-06-24
+last-verified: 2026-08-07
 
 ## 这是什么
 
-docstrata 是一个 Agent Skill：给一个项目目录，它产出几种不同性质的文档——产品主张、需求共识、业务知识库、业务全景、开发结论。每种文档对应不同受众和用途，分开存放、互不污染。
-
-它提速的是"人与 agent 结对开发"的小闭环——人说清需求、做决策，agent 专注执行——而非自动写代码。完整的产品主张与取舍见 [docs/prd.md](prd.md)（对内）。
+docstrata 是一个 Agent Skill，定位**项目的结构化记忆系统**——管理和提供高杠杆 context，不指挥具体执行。与工程执行 skill（如 Matt Pocock skills）兼容协作，零重叠。
 
 ## 解决什么问题
 
-项目形态各异（全栈服务、Dify 应用、CLI/MCP、Skill），文档需求却共通：业务要看懂系统、需求要留痕、业务材料要可检索、开发结论要沉淀。混在一份 README 里会相互污染——典型表现是新的 agent 会话把已定的架构决策当成开放问题重新讨论，白跑一轮 grill。docstrata 用一个 skill 的多个子命令按性质分层解决。
+coding agent 开发时的三个痛点：
+
+1. **启动成本高**：每次新会话从零探索代码库，重复理解架构
+2. **决策散落**：踩过的坑、否定的方案留在对话里，下次从头来
+3. **context 污染**：不同性质的知识混在一起，agent 分不清什么是事实、什么是过期的推断
+
+docstrata 用分层结构解决：正确的知识在正确的地方，agent 按需取用。
 
 ## 谁在用
 
-用 agent 结对开发的团队与个人，尤其长周期项目。
-
-文档服务三类读者各取所需：业务与管理侧读 wiki，开发者读 requirements/dev，coding agent 经 INDEX 按需检索。后续若有价值会开源 `[待确认]`（开源是计划，非已承诺的事实）。
+用 coding agent 开发的团队和个人，尤其长周期项目。文档同时服务三类读者：业务侧读 wiki，开发者读 dev/requirements，coding agent 经 INDEX.md 按需检索。
 
 ## 核心功能
 
-每个子命令产出一层文档。先自动探索项目，只在信息有缺口时才向人提问（结对 grill），增量更新保留人工修改。
+每个子命令产出一层文档。先自动探索项目，只在人类必须拍板时才提问（frontier grill），增量更新保留人工修改。
 
-- **prd** — 固化对内的产品主张：定位、价值原则、功能范围、roadmap。
-- **requirements** — 还原/固化需求共识与关键决策（决策留痕）。
-- **knowledge** — 把业务原始材料整理成可检索的索引。
-- **wiki** — 生成对外业务全景，非技术读者也能快速理解系统。
-- **dev** — 记录开发推断与实践结论。
-- **index** — 给 coding agent 的检索入口。
-- **compact** — 收缩随迭代膨胀的层文档，让长期记忆保持有界、可用。
-- **all** — 按依赖顺序一次生成全部。
+- **prd** — 产品意图：定位、价值、功能范围、roadmap
+- **requirements** — 需求共识与关键决策
+- **knowledge** — 业务原始材料的可检索索引 + 领域术语 Glossary
+- **wiki** — 面向所有人的系统全景（业务语言）
+- **repo-wiki** — 代码库索引：架构、模块关系、技术栈、数据流、API 表面积（技术语言，给 coding agent）
+- **dev** — 工程结论：code+git 复原不出来的踩坑、被否方案、非显然决策
+- **index** — 文档导航 + 各层触发条件（什么场景读哪层、新认知写到哪）
+- **compact** — 收缩膨胀的层文档
 
 ## 关键概念
 
-- **CoALA 分层** — 文档分层的学术依据：wiki/requirements/knowledge/dev 四层对应三种长期记忆（情景 / 语义 / 流程）。prd 是这之上的前瞻产品意图，记当下主张，不属 CoALA 记忆。
-- **Completeness Contract** — 每层声明的信息维度集合，驱动"该不该问人"：`问题 = 契约维度 − 已探索信息`。
-- **Gap-Driven Grill** — 只对探索不到的维度提问，把人当作补全 context 的工具，信息足则整层跳过。
+- **Context Triggers** — 定义各层的触发条件：什么场景该读哪层、新认知该写到哪里。写在 INDEX.md 里，按需而非强制。
+- **Completeness Contract** — 每层声明的信息维度集合，驱动 GRILL：`问题 = 维度 − 已探索信息`。
+- **Facts vs Decisions** — EXPLORE 阶段主动解决 agent 能查的事实缺口；GRILL 只问需要人类判断的决策。
+- **Frontier Grill** — 每轮问出所有前置条件已满足的问题，3-5 轮完成全部提问。
+- **CoALA 分层** — 文档分层的学术依据：Episodic / Semantic / Procedural 三类长期记忆。
 
 ## 如何运转（概览）
 
-每层都走同一个循环：探索上下文 → 信息映射到契约维度 → 仅对缺口提问 → 按固定骨架生成 → 留痕时间戳。
+```
+EXPLORE（穷尽自动探索 + 解决 facts）
+    → MAP（映射到 completeness contract）
+    → GRILL（只问 decisions，frontier 轮次）
+    → GENERATE（固定骨架 + writing-for-agents 质量标准）
+    → STAMP（时间戳）
+```
 
-长期使用下文档会膨胀，靠手动 `compact` 收回有界（先压再拆、归档不删、硬事实保真）。
+repo-wiki 层的 EXPLORE 调用内置扫描脚本（无 LLM 消耗）自动提取代码结构，LLM 在 GENERATE 阶段补语义描述和架构图。
+
+## 如何上手
+
+```bash
+npx skills add linhai0872/docstrata
+```
+
+在目标项目里跑 `/docstrata all` 或指定层。兼容 Claude Code、Cursor、Gemini CLI、Codex、OpenCode。
 
 ## 边界
 
-- 不限定项目类型，工具自判。
-- knowledge 层只整理已有材料，不从代码逆推业务规则。
-- 不生成运行时动态 memory，不碰 AGENTS.md/CLAUDE.md 的行为约束。
-- 第一版不做平台 API 集成、不做静态站发布。
+- 不限定项目类型，工具自行判断
+- 不指挥具体开发执行（那是 coding agent / 执行 skill 的事）
+- knowledge 层只整理已有材料，不从代码逆推业务规则
+- 不生成运行时动态 memory，不碰 AGENTS.md 的行为约束
+- 与 Matt Pocock skills 兼容协作：docstrata 管 context，Matt skills 管执行纪律

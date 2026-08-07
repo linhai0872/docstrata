@@ -2,7 +2,7 @@
 
 > docstrata 把开发中反复发生的决策与事实，用 grilling 固化成分层、不膨胀、人机皆可读的项目知识；它只做"澄清需求、记录决策"，执行交给模型。
 
-last-verified: 2026-06-24 | prd.md 64 行
+last-verified: 2026-08-07 | prd.md 63 行
 
 ## 定位
 
@@ -37,11 +37,10 @@ docstrata 是一个 Agent Skill：把结对开发里产生的决策与事实，�
 
 docstrata 覆盖"固化—检索—维护"全程。下面每条是产品意图（要做成什么），不是命令清单：
 
-- **分层固化**：prd（产品主张）/ requirements（需求共识与决策）/ knowledge（业务材料索引）/ wiki（对外全景）/ dev（开发结论）。按知识性质分开，互不污染。
+- **分层固化**：prd（产品主张）/ requirements（需求共识与决策）/ knowledge（业务材料索引）/ wiki（对外全景）/ repo-wiki（代码库索引）/ dev（开发结论）。按知识性质分开，互不污染。
 - **grilling 消歧**：completeness contract 驱动，只对探索不到的缺口提问；信息足则整层跳过。卡在产品决策时 PRD 兜底。
-- **检索入口**：INDEX.md 给 coding agent 一个按需装填四层长期记忆的轻量导航。
+- **检索入口**：INDEX.md 给 coding agent 一个按需装填五层长期记忆的轻量导航。
 - **收缩维护**：compact 把随迭代膨胀的层收回有界（先压再拆、归档不删、硬事实保真），让长期记忆长期可用。
-- **自验闭环**：eval 用 reference-free rubric + 跨厂商 ensemble 给生成质量打分，让 skill 迭代是真改进而非自我感觉。
 
 ## 非目标
 
@@ -51,17 +50,17 @@ docstrata 明确不碰以下领域：
 - **不做会话内执行规划**：plan 模式那种"这次怎么做"的细化留给 agent 运行时；docstrata 只固化跨会话有效的决策。
 - **不生成运行时动态 memory**：对话提炼的即时经验由 agent 运行时自己写（Anthropic memory tool / Mem0 那类），docstrata 不越界。
 - **不做行为约束**：AGENTS.md/CLAUDE.md 的"怎么干活"操作契约是另一回事，docstrata 做"知识在哪"，两者不混写。
-- **不维护标准答案**：eval 是 reference-free，项目本身是 ground truth，不背 golden answer 的维护成本。
 - **v1 不做平台集成 / 静态站发布**：仅本地文件 + URL，不接 Notion/Confluence、不导出静态站。
 
 ## Roadmap
 
 按近→远排列，条目带日期。这是前瞻主张，随认知更新重写。
 
-- **2026-06 已落地**：新增 prd 层 + compact 收缩操作；dev 层加毕业 gate（只记 code/git 复原不出来的）；文风加两段式 + 可选向上指针；eval 支持 PRD 层评分。
+- **2026-06 已落地**：新增 prd 层 + compact 收缩操作；dev 层加毕业 gate（只记 code/git 复原不出来的）；文风加两段式 + 可选向上指针。
+- **2026-08 已落地**：新增 repo-wiki 层（代码库结构化索引）；Context Contract 改为条件触发式（context not control）；GRILL 默认 frontier 轮次；writing-for-agents 质量标准；删除 eval（实际使用中收益低于维护成本）。
 - **下一步（grilling 中）**：开发周期闭环（loop）——读取文档、grilling 出待办、research/POC、按需求大小决定做法、分档 test/review、验收落库、提交。载体不预设（skill / rule / 原生 / 不要），逐节点 grill 出最佳实践。docstrata 是这个闭环的长期记忆地基，读写两端都接它。
-- **评估中**：eval 回归打分上 pairwise（改前/改后同时给 judge 选，比绝对分敏感），等绝对分判断不准时再做。
 
 ## 变更记录
+- 2026-08-07 v2 定位升级为 Project Context System；新增 repo-wiki 层、context contract、facts/decisions 分离、frontier grill
 - 2026-06-24 首次生成（dogfood 新增的 prd 层；产品主张前瞻 intent，与 requirements 的已发生决策分离）
 - 2026-06-24 文风重构

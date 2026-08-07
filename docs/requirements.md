@@ -4,7 +4,7 @@
 >
 > 产品主张（要做成什么、roadmap）见 [docs/prd.md](prd.md)——本文件只记已发生的事实，前瞻愿望归 PRD。
 
-last-verified: 2026-06-24
+last-verified: 2026-08-07
 
 ## Background
 
@@ -13,7 +13,7 @@ last-verified: 2026-06-24
 理论锚点：
 
 - **CoALA**（Sumers et al., Princeton/CMU, TMLR 2024, arXiv:2309.02427）：Agent 记忆架构。三类**长期记忆**（Episodic / Semantic / Procedural）存持久知识；**Working Memory** 是"为当前决策周期维护活跃信息的中央枢纽"（原文：*central hub connecting different components*），知识从长期记忆被 retrieved into working memory 以支撑推理。它是运行时的临时中转，不是知识本身的存放处。
-  - **我们的映射**：四层文档对应三类长期记忆（见下表）。Working Memory 是 agent 运行时的 context，**文档工具不生产它**；我们能做的是给它一个高效检索四层长期记忆的入口（`docs/INDEX.md`），优化 retrieval 路径，而非实现 working memory 本身。详见 D10。
+  - **我们的映射**：五层文档对应三类长期记忆（见下表）。Working Memory 是 agent 运行时的 context，**文档工具不生产它**；我们能做的是给它一个高效检索五层长期记忆的入口（`docs/INDEX.md`），优化 retrieval 路径，而非实现 working memory 本身。详见 D10。
 - **Diátaxis**（diataxis.fr）：文档四象限（tutorial/how-to/reference/explanation），验证"固定骨架+自由内容"有效。
 - **Anthropic Agent Skills**：渐进式披露三层加载（metadata → SKILL.md → references）。
 
@@ -34,12 +34,13 @@ last-verified: 2026-06-24
 
 ## 分层定义与 CoALA 映射
 
-四层（wiki/requirements/knowledge/dev）对应 CoALA 的**长期记忆**（持久知识），不含 Working Memory（那是 agent 运行时 context，见理论锚点与 D10）。`prd` 是这四层之上的**前瞻产品意图**，不属 CoALA 记忆三类（它是当下主张，不是已沉淀记忆），见 D13。
+五层（wiki/repo-wiki/requirements/knowledge/dev）对应 CoALA 的**长期记忆**（持久知识），不含 Working Memory（那是 agent 运行时 context，见理论锚点与 D10）。`prd` 是这五层之上的**前瞻产品意图**，不属 CoALA 记忆三类（它是当下主张，不是已沉淀记忆），见 D13。
 
 | 子命令 | 类型 | 本质 | 受众 | 内容来源 |
 |---|---|---|---|---|
 | `prd` | 前瞻 intent（非 CoALA） | 产品主张：定位/价值/功能范围/roadmap | 产品负责人 + agent（对内） | 人定主张，AI 整理 |
 | `wiki` | Semantic | 系统全景，快速理解整个系统 | 所有人（含业务，对外） | AI 生成，从代码/需求推导 |
+| `repo-wiki` | Semantic（代码缓存） | 代码库索引：架构/模块/技术栈/数据流 | coding agent + 开发者 | 扫描脚本 + AI 语义描述（D20） |
 | `requirements` | Episodic | 需求方与开发者的共识约定 + 开发计划（决策留痕：责任与决策） | PM + 开发 | 部分原始需求 + 部分 AI 整理 |
 | `knowledge` | Semantic | 业务专属原始材料库（规章制度、业务规则等 raw data） | 技术 + 业务 | **已有文档为主，AI 整理+索引** |
 | `dev` | Procedural | 开发推断与实践结论（推断/实践事实，非原始事实） | 开发 + 维护者 | AI 生成，从代码+需求+知识推导 |
@@ -58,7 +59,7 @@ wiki 与 knowledge 同属 Semantic 层但视角不同：wiki 是"系统能做什
 
 - 命令：`/doc wiki | requirements | knowledge | dev | all`
 - 支持显式指定单层，也支持 `all` 一键全生成。
-- 后续扩展：D13 加 `prd` 层、D14 加 `compact` 收缩操作，当前为 `/doc prd | requirements | knowledge | wiki | dev | index | compact | all`。一 skill 多子命令的结构不变。
+- 后续扩展：D13 加 `prd` 层、D14 加 `compact` 收缩操作、D20 加 `repo-wiki` 层。当前操作入口 `/docstrata`（D19），完整列表 `/docstrata prd | requirements | knowledge | wiki | repo-wiki | dev | index | compact | update | all`。一 skill 多子命令的结构不变。
 
 ### D2 — 层间有依赖顺序，但每层可独立触发
 
@@ -68,7 +69,7 @@ wiki 与 knowledge 同属 Semantic 层但视角不同：wiki 是"系统能做什
 
 先探索、后提问——只有契约维度填不满时才 grill。
 
-工具先自动探索上下文（读文件/现有文档/代码），把信息映射到每层的 **completeness contract**（信息维度），仅对缺失/低置信维度动态提问。信息够则跳过 grill 直接生成。一次问一个问题，附 AI 推荐答案（grill-with-docs 风格）。
+工具先自动探索上下文（读文件/现有文档/代码），把信息映射到每层的 **completeness contract**（信息维度），仅对缺失/低置信维度动态提问。信息够则跳过 grill 直接生成。默认用 frontier 轮次（每轮问出所有已解锁问题，3-5 轮完成），可配置为一次一个。附 AI 推荐答案。见 D22。
 
 ### D4 — Grill 方法论：动态提问，不用固定清单
 
@@ -98,6 +99,7 @@ wiki 与 knowledge 同属 Semantic 层但视角不同：wiki 是"系统能做什
 docs/
 ├── prd.md                # 产品主张（D13 新增）
 ├── wiki.md
+├── repo-wiki.md          # 代码库索引（D20 新增）
 ├── requirements.md
 ├── knowledge/
 │   ├── knowledge.md      # 整理后的索引（导读层）
@@ -201,6 +203,44 @@ audit 是生成流程末尾的诊断报告，不是独立命令。
 - **备选**：保留 `/doc` 作 alias——否决，双入口增加认知负担。
 - **后果**：历史决策（D1/D12/D14 等）里出现的 `/doc` 是决策当时的事实，不 retroactive 改写。当前操作入口统一 `/docstrata {子命令}`，如 `/docstrata wiki`、`/docstrata compact dev`。
 
+### D20 — 新增 repo-wiki 层（代码库结构化索引）
+
+- **决策**：新增 `repo-wiki` 层，产出 `docs/repo-wiki.md`，EXPLORE 阶段调用 `scripts/scan-codebase.py` 输出结构化 JSON（目录树、import 关系、模块边界、PageRank、技术栈），LLM 在 GENERATE 阶段补充语义描述和 Mermaid 架构图。
+- **背景**：coding agent 进入项目时最缺的是代码层面的全局认知——架构/模块/数据流。之前只有 wiki（业务语言）和 dev（工程踩坑），没有面向 agent 的代码结构索引。
+- **后果**：repo-wiki 与 wiki 平行（互不依赖），同属 Semantic 层但视角不同：wiki 是"系统能做什么"，repo-wiki 是"代码怎么组织的"。CoALA 映射表从四层扩展到五层。
+
+### D21 — INDEX 改为条件触发式（context not control）
+
+- **决策**：INDEX.md 的 Context Contract 从"准入/准出强制清单"改为条件触发式指针：根据 agent 当前任务自行判断是否需要读某层，不是每次开工前走一遍流程。
+- **背景**：原版"开发前必须读 X、开发后必须写 Y"是控制语言，与 prd 的非目标（"不做行为约束"）矛盾，也与 docstrata 的定位（提供 context，不指挥执行）不一致。
+- **后果**：INDEX.md 从"仪式清单"变成"上下文触发器"——agent 遇到特定场景时知道去哪读，新认知知道该写到哪。
+
+### D22 — GRILL 默认 frontier 轮次
+
+- **决策**：GRILL 默认采用 frontier 轮次（每轮问出所有前置条件已满足的问题），可配置为一次一个。
+- **背景**：逐个提问在维度多时轮次太多，用户等待成本高。frontier 批量解锁，通常 3-5 轮完成。
+- **后果**：D3 更新，frontier 为默认；用户可在 CLAUDE.md/AGENTS.md 声明 `grill-style: one-at-a-time` 退回逐个模式。
+
+### D23 — 删除 eval，writing-for-agents 质量标准替代
+
+- **决策**：删除 `eval/` 目录及相关评测机制。生成质量改由 writing-for-agents 原则（doc-conventions.md）约束，实际使用中的人工审阅替代自动评分。
+- **背景**：eval 在实际迭代中收益低于维护成本——rubric 调校本身需要大量精力，reference-free 评分对文档质量的区分度有限。
+- **后果**：D18 成为历史记录（eval 曾支持 prd 层）。质量保障从自动评分转向写作规范约束 + 人工审阅。
+
+### D24 — 新增 update 子命令（变更驱动的增量刷新）
+
+- **决策**：新增 `update` 横切操作，检测项目变更 → 映射受影响的层 → 报告 → 确认后批量刷新。支持 `--auto`（跳过确认）和 `--dry-run`（只报告）。
+- **背景**：v2 的 Context Triggers（D21）解决了"开发后新认知该往哪写"的指引问题，但缺少"写完之后哪些层需要同步"的主动检测。`all` 是暴力全刷，不区分哪些层受影响。workflow 的"结尾自驱"需要一个变更感知的增量刷新机制。
+- **备选**：全自动 git hook 每次 commit 触发——延后。LLM 生成有 token 成本，每次 commit 都跑不现实。`update --auto` 预留了这个路径。
+- **后果**：D1 子命令列表扩展为 `/docstrata prd | requirements | knowledge | wiki | repo-wiki | dev | index | compact | update | all`。workflow 闭环：开发前 INDEX 触发读 → 开发中 Matt skills → 开发后 `update` 检测并刷新。
+
+### D25 — CONTEXT.md 回收机制（compact 时执行）
+
+- **决策**：compact 时顺带回收 CONTEXT.md 的内容到 docstrata 各层：术语 → knowledge Glossary，ADR → dev 层，模块描述 → 标记 repo-wiki 需刷新。回收后 CONTEXT.md 本身不删不改。
+- **背景**：Matt domain-modeling 维护的 CONTEXT.md 是工作面文件（快照），docstrata 各层是权威源。两者内容会逐渐漂移，需要定期同步。
+- **备选**：每次跑 `update` 时自动回收——否决。CONTEXT.md 变更频率高，每次都回收噪音大。compact 是低频的人工触发操作，适合做这种整理。
+- **后果**：compact.md 新增"CONTEXT.md 回收"章节。CONTEXT.md 继续由 Matt skills 维护，docstrata 只读取不写入。
+
 ## Constraints
 
 交付形态：Claude Code Skill（开放标准，跨 agent 平台可用）。CLI 留待后续。
@@ -214,3 +254,5 @@ Agent 友好文档规范（来自调研）：渐进式披露、小文档、每�
 - 2026-06-24 dogfood 本轮：四层→分层框架，新增 prd 层定义与 CoALA 边界；追加 D13（prd 层）、D14（compact 收缩）、D15（去黑话留四段骨）、D16（可读性）、D17（dev 毕业门槛）、D18（eval 支持 prd）；D1/D6 补扩展指针
 - 2026-06-24 文风重构
 - 2026-06-24 D19：skill 更名为 docstrata，命令 `/docstrata`，目录 `skill/docstrata/`
+- 2026-08-07 v2 落地：追加 D20（repo-wiki 层）、D21（INDEX context not control）、D22（frontier 轮次）、D23（删除 eval）；D3 更新 frontier 默认；D6 目录结构加 repo-wiki.md；CoALA 映射表四层→五层
+- 2026-08-07 v2 补充：追加 D24（update 子命令）、D25（CONTEXT.md 回收）；D1 子命令列表更新

@@ -2,7 +2,7 @@
 
 > 这个 skill 在设计与实测中沉淀的工程结论：契约该放哪、哪些反馈是测试假象、为什么克制加维度。
 
-last-verified: 2026-06-24
+last-verified: 2026-08-07
 
 参考上游：[wiki](wiki.md) · [requirements](requirements.md)
 
@@ -131,6 +131,48 @@ D13–D18 是结对 grill 出的设计决策，尚未经真实长周期项目验
 
 据实测做的泛化修改：index 骨架的操作约定兜底（AGENTS.md→CLAUDE.md→README，都没有则删行）、行数改"目标 20-30 上限 60"；audit 新增"版本漂移""待验证外部假设"两类、补单跑 index 无 audit、补输出时序。
 
+## v2 迭代决策（2026-08-07）
+
+### 定位升级：文档工具 → Project Context System
+
+docstrata 从“分层文档生成工具”升级为“项目的结构化记忆系统”（Project Context System）。核心变化：管理和提供高杠杆 context，定位互补——docstrata 管 context，Matt skills 管执行纪律。
+
+### 新增 repo-wiki 层
+
+填补了 docstrata 缺少的“代码库结构化理解”。借鉴 Qoder Repo Wiki 的章节体系（System Overview / Technology Stack / Architecture / Modules / Data Flow / API Surface / Configuration / Constraints），扫描脚本借鉴 RepoWiki 的 import 解析 + PageRank。
+
+关键决策：
+- repo-wiki 与 wiki 平行（互不依赖），不是 wiki 的子集
+- 半自动：扫描脚本无 LLM 消耗，LLM 只在 GENERATE 阶段补语义
+- 扫描脚本自带在 scripts/ + 定义 JSON 接口规范允许替换
+
+### GRILL 机制升级
+
+三个变化：
+1. **Facts vs Decisions**：EXPLORE 主动解决 agent 能查的事实，GRILL 只问人类必须拍板的决策。借鉴 Matt 1.1 的改进。
+2. **Frontier 轮次**：每轮问出所有前置条件已满足的问题，3-5 轮完成。借鉴 Matt 1.2 的 round-by-round grilling。
+3. **Prototype 子动作**：GRILL 中遇设计假设需验证时，agent 自主 spike。
+
+### Context Triggers（原 Context Contract，D21 改）
+
+INDEX.md 从“文档在哪”的导航，扩展为条件触发式指针：根据 agent 当前场景判断需要读哪层、新认知写到哪里。按需取用，不强制每次开工走流程。
+
+### CONTEXT.md 映射
+
+Matt 的 domain-modeling 维护的 CONTEXT.md 是工作面文件，docstrata 各层是权威源。术语 → knowledge Glossary，ADR → dev 层。定期回收，不冲突。
+
+### writing-for-agents 质量标准
+
+GENERATE 产出的文档遵循 7 条原则：context pointer / progressive disclosure / leading word / single source of truth / cache 原则 / no-op 检测 / 正面表述。借鉴 Matt 1.2 的 writing-for-agents skill。
+
+### 已否定的方案（v2）
+
+- **全链路融合（docstrata 自己覆盖 grill/spec/tickets/implement/review）**：否定。会变成 Matt 的 fork，维护成本高且失去独特定位。
+- **CONTEXT.md 直接作为 knowledge 层载体**：否定。CONTEXT.md 横跨两层（术语=knowledge，ADR=dev），强行合并会破坏分层原则。
+- **全自动 git hook 触发 repo-wiki 更新**：延后。LLM 生成有 token 成本，每次 commit 触发不现实。先做半自动，预留扩展路径。
+- **repo-wiki 作为独立 skill**：否定。用户心智模型统一“所有 context 管理走 docstrata”更简单。
+
+
 ## 延伸知识
 
 **理论锚点的取舍** [实测]
@@ -151,3 +193,4 @@ D13–D18 是结对 grill 出的设计决策，尚未经真实长周期项目验
 - 2026-06-04 修正 延伸知识 中 CoALA 表述（四层对应三类长期记忆，Working Memory 不属四层，与 CoALA 核查结论 / D11 对齐）
 - 2026-06-24 dogfood 本轮：需求→实现映射补 prd/compact/可读性（D13/D14/D16）；新增"本轮新增未实测 [推断]"诚实标注；CoALA 延伸补 prd 不属记忆三类
 - 2026-06-24 文风重构
+- 2026-08-07 v2 迭代：定位升级 Project Context System、新增 repo-wiki 层 + 扫描脚本、GRILL frontier 轮次 + facts/decisions 分离 + prototype 子动作、context triggers、writing-for-agents 质量标准

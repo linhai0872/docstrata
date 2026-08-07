@@ -86,6 +86,19 @@ abstractive 总结会把硬事实总结错（faithfulness 幻觉）。compact �
 
 决策若用了编号（D1、D23 这种），编号是项目里实际流通的交叉引用 handle（commit、对话、其他文档都在引）。compact 折叠决策时**保留编号**，删了会断引用。去掉的是「ADR」这类术语黑话，不是编号本身。
 
+## CONTEXT.md 回收
+
+compact 时顺带回收 CONTEXT.md 里沉淀的内容到 docstrata 各层。CONTEXT.md 是 Matt domain-modeling 维护的工作面文件（快照），docstrata 各层是权威源。回收规则：
+
+| CONTEXT.md 内容 | 回收到 | 动作 |
+|---|---|---|
+| 术语定义、Glossary 条目 | `docs/knowledge/knowledge.md` | 合并到 Glossary 区，去重 |
+| ADR（架构决策记录） | `docs/dev.md` | 归入"已否定的方案"或"关键实现决策" |
+| 模块描述、依赖关系 | `docs/repo-wiki.md` | 标记 repo-wiki 需刷新（由 update 或手动触发） |
+| 项目约定、红线 | AGENTS.md / CLAUDE.md | 不由 docstrata 回收（不在职责内） |
+
+回收后 CONTEXT.md 本身不删——它继续作为工作面文件，被 Matt skills 增量更新。docstrata 只"抄走"有价值的部分到权威源，不修改 CONTEXT.md。
+
 ## review-all 协议（借 Cursor Memory Bank）
 
 compact 动手前必须通读目标文件全文——只扫局部会漏掉跨段重复和该归并的同主题条目，而这恰是膨胀的主因。

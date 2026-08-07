@@ -8,9 +8,8 @@ __pycache__/
 .agents/
 skills-lock.json
 
-# eval
-eval/runs/
-eval/output/
+# scan intermediate artifacts
+docs/.repo-wiki-scan.json
 
 # secrets
 .env
