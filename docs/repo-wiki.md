@@ -89,8 +89,8 @@ docstrata 用自己的分层结构记录自己的 context。这些文件既是�
 
 | 文件 | 职责 |
 |---|---|
-| `README.md` | 英文主 README（面向 GitHub） |
-| `README_ZH.md` | 中文 README |
+| `README.md` | 中文主 README（面向 GitHub） |
+| `README_EN.md` | 英文 README |
 | `LICENSE` | MIT |
 | `docstrata-logo.svg` | Logo |
 | `skills-lock.json` | 本地 skill 安装锁文件 |
